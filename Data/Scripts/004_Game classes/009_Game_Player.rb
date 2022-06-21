@@ -420,6 +420,7 @@ class Game_Player < Game_Character
     last_real_x = @real_x
     last_real_y = @real_y
     super
+    update_stop if $game_temp.in_menu && @stopped_last_frame
     update_screen_position(last_real_x, last_real_y)
     # Update dependent events
     if (!@moved_last_frame || @stopped_last_frame ||
@@ -517,6 +518,7 @@ class Game_Player < Game_Character
       @pattern = p if !@lock_pattern
       @pattern_surf = p
       @bob_height = (p >= 2) ? 2 : 0
+      @anime_count = 0
     else
       @bob_height = 0
       super

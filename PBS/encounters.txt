@@ -1,0 +1,20 @@
+﻿# See the documentation on the wiki to learn how to edit this file.
+#-------------------------------
+[032] # Route 2
+Land,21
+    40,HOOTHOOT_1,2,4
+    40,MANKEY_1,2,4
+    9,HOOTHOOT_1,3,4
+    9,MANKEY_1,3,4
+    1,HOOTHOOT_1,5
+    1,MANKEY_1,5
+#-------------------------------
+[042] # Yucata Ruins
+Land,21
+    40,MAGNEMITE_1,2,4
+    40,RUFFLET,2,4
+    9,MAGNEMITE_1,3,4
+    9,RUFFLET,3,4
+    1,MAGNEMITE_1,5
+    1,RUFFLET,5
+#-------------------------------

@@ -59,7 +59,7 @@ GameData::Environment.register({
 GameData::Environment.register({
   :id           => :Puddle,
   :name         => _INTL("Puddle"),
-  :battle_base => "puddle"
+  :battle_basec => "puddle"
 })
 
 GameData::Environment.register({

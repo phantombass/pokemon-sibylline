@@ -1,7 +1,7 @@
 #===============================================================================
 #
 #===============================================================================
-class ReadyMenuButton < SpriteWrapper
+class ReadyMenuButton < Sprite
   attr_reader :index   # ID of button
   attr_reader :selected
   attr_reader :side
@@ -305,8 +305,8 @@ def pbUseKeyItem
            :WATERFALL, :WHIRLPOOL]
   real_moves = []
   moves.each do |move|
-    $player.pokemon_party.each_with_index do |pkmn, i|
-      next if !pkmn.hasMove?(move)
+    $player.party.each_with_index do |pkmn, i|
+      next if pkmn.egg? || !pkmn.hasMove?(move)
       real_moves.push([move, i]) if pbCanUseHiddenMove?(pkmn, move, false)
     end
   end

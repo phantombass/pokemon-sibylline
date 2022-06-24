@@ -718,8 +718,6 @@ class Battle::Move::LowerUserDefSpDef1 < Battle::Move::StatDownMove
   end
 end
 
-
-
 #===============================================================================
 # Decreases the user's Defense, Special Defense and Speed by 1 stage each.
 # (V-create)
@@ -741,7 +739,7 @@ class Battle::Move::RaiseTargetAttack1 < Battle::Move
     return false if damagingMove?
     failed = true
     targets.each do |b|
-      next if b.pbCanRaiseStatStage?(:ATTACK, user, self)
+      next if !b.pbCanRaiseStatStage?(:ATTACK, user, self)
       failed = false
       break
     end
@@ -946,12 +944,12 @@ class Battle::Move::LowerTargetDefense1 < Battle::Move::TargetStatDownMove
 end
 
 #===============================================================================
-# Decreases the target's Defense by 1 stage. Power is doubled if Gravity is in
-# effect. (Grav Apple)
+# Decreases the target's Defense by 1 stage. Power is mutliplied by 1.5 if
+# Gravity is in effect. (Grav Apple)
 #===============================================================================
-class Battle::Move::LowerTargetDefense1DoublePowerInGravity < Battle::Move::LowerTargetDefense1
+class Battle::Move::LowerTargetDefense1PowersUpInGravity < Battle::Move::LowerTargetDefense1
   def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if @battle.field.effects[PBEffects::Gravity] > 0
+    baseDmg = baseDmg * 3 / 2 if @battle.field.effects[PBEffects::Gravity] > 0
     return baseDmg
   end
 end

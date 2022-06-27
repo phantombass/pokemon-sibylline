@@ -18,3 +18,12 @@ Land,21
     1,MAGNEMITE_1,5
     1,RUFFLET,5
 #-------------------------------
+[079] # Route 3
+Land,21
+    20,JOLTIK_1,4,6
+    20,HOOTHOOT_1,4,6
+    20,JOLTIK_1,5,7
+    20,HOOTHOOT_1,5,7
+    10,POLIWAG_1,8
+    10,CHINGLING,8
+#-------------------------------

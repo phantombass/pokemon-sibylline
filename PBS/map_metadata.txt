@@ -423,3 +423,11 @@ Name = Tiall Region
 Outdoor = true
 MapPosition = 1,13,16
 BattleBack = city
+#-------------------------------
+[079]   # Route 3
+Name = Route 3
+Name = 
+Outdoor = true
+ShowArea = true
+MapPosition = 0,8,4
+SnapEdges = true

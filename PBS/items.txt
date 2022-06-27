@@ -4684,60 +4684,6 @@ Flags = Fling_90
 Move = ROCKCLIMB
 Description = A charging attack that may also leave the foe confused.
 #-------------------------------
-[HM01]
-Name = HM01
-NamePlural = HM01s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = CUT
-Description = The target is cut with a scythe or claw. This can also be used to cut down thin trees.
-#-------------------------------
-[HM02]
-Name = HM02
-NamePlural = HM02s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = FLY
-Description = The user soars and then strikes on the next turn. This can also be used to fly to any familiar town.
-#-------------------------------
-[HM03]
-Name = HM03
-NamePlural = HM03s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = SURF
-Description = Attacks everything by swamping the surroundings with a giant wave. This can also be used to cross water.
-#-------------------------------
-[HM04]
-Name = HM04
-NamePlural = HM04s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = STRENGTH
-Description = The target is slugged with a punch thrown at maximum power. This can also be used to move heavy boulders.
-#-------------------------------
-[HM05]
-Name = HM05
-NamePlural = HM05s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = WATERFALL
-Description = The user charges at the target and may make it flinch. It can also be used to climb a waterfall.
-#-------------------------------
-[HM06]
-Name = HM06
-NamePlural = HM06s
-Pocket = 4
-Price = 0
-FieldUse = TM
-Move = DIVE
-Description = Diving on the first turn, the user floats up and attacks on the second. It can be used to dive underwater.
-#-------------------------------
 [CHERIBERRY]
 Name = Cheri Berry
 NamePlural = Cheri Berries
@@ -6178,4 +6124,14 @@ Pocket = 9
 Price = 4000
 Flags = Fling_130
 Description = A Pokémon held item that grants the holder a second ability of Amplifier.
+#-------------------------------
+[TM101]
+Name = TM101
+NamePlural = TM101s
+Pocket = 4
+Price = 2000
+FieldUse = TM
+Flags = Fling_90
+Move = ECHOEDVOICE
+Description = The user attacks the foe with an echoing voice. If this move is used every turn, it does greater damage.
 #-------------------------------

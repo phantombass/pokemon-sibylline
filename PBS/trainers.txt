@@ -6,3 +6,81 @@
 LoseText = Oh you are good!
 Pokemon = CHINGLING,5
 	Moves = MACHPULSE,GROWL
+#-------------------------------
+# Route 3
+#-------------------------------
+[CAMPER,Jeff]
+LoseText = Wow, you're strong!
+Pokemon = HOOTHOOT,5
+#-------------------------------
+[COOLTRAINER_F,Ashley]
+LoseText = Oh that's a first...
+Pokemon = PIKACHU,7
+Pokemon = JOLTIK,7
+	Form = 1
+Pokemon = ARROKUDA,7
+	Form = 1
+Pokemon = RUFFLET,7
+	Form = 1
+#-------------------------------
+[COOLTRAINER_F,Ashley,1]
+LoseText = Oh that's a first...
+Pokemon = PIKACHU,7
+	Moves = THUNDERSHOCK,MACHPULSE,FAKEOUT
+Pokemon = JOLTIK,7
+	Moves = STRUGGLEBUG,PURSUIT,STRINGSHOT
+	Form = 1
+Pokemon = ARROKUDA,7
+	Moves = AQUAJET,FURYATTACK,SLASH
+	Form = 1
+Pokemon = RUFFLET,7
+	Moves = PECK,HONECLAWS,ASSURANCE
+	Form = 1
+#-------------------------------
+[COOLTRAINER_F,Ashley,2]
+LoseText = Oh that's a first...
+Pokemon = PIKACHU,7
+	IV = 20,20,20,20,20,20
+	Moves = THUNDERSHOCK,MACHPULSE,FAKEOUT,GRASSKNOT
+Pokemon = JOLTIK,7
+	IV = 20,20,20,20,20,20
+	Moves = STRUGGLEBUG,PURSUIT,STRINGSHOT,NIGHTDAZE
+	Form = 1
+Pokemon = ARROKUDA,7
+	IV = 20,20,20,20,20,20
+	Moves = AQUAJET,FURYATTACK,SLASH,NIGHTSLASH
+	Form = 1
+Pokemon = RUFFLET,7
+	IV = 20,20,20,20,20,20
+	Moves = PECK,HONECLAWS,ASSURANCE,DUALWINGBEAT
+	Form = 1
+#-------------------------------
+[COOLTRAINER_F,Ashley,3]
+LoseText = Oh that's a first...
+Pokemon = PIKACHU,7
+	IV = 31,31,31,31,31,31
+	EV = 0,0,4,252,252,0
+	Item = AIRBALLOON
+	Ability_Index = 2
+	Moves = VOLTSWITCH,MACHPULSE,FAKEOUT,GRASSKNOT
+Pokemon = JOLTIK,7
+	IV = 31,31,31,31,31,31
+	EV = 0,0,4,252,252,0
+	Item = BERRYJUICE
+	Ability_Index = 2
+	Moves = STRUGGLEBUG,PURSUIT,GLARE,NIGHTDAZE
+	Form = 1
+Pokemon = ARROKUDA,7
+	IVs = 31,31,31,31,31,31
+	EV = 0,252,4,252,0,0
+	Item = INTIMIDATEORB
+	Moves = AQUAJET,FURYATTACK,SLASH,NIGHTSLASH
+	Form = 1
+Pokemon = RUFFLET,7
+	IVs = 31,31,31,31,31,31
+	EV = 0,252,4,252,0,0
+	Item = BERRYJUICE
+	Ability_Index = 1
+	Moves = ROOST,HONECLAWS,ASSURANCE,DUALWINGBEAT
+	Form = 1
+#-------------------------------

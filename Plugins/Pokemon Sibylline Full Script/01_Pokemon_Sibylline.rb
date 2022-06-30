@@ -21,10 +21,12 @@ end
 
 class PokemonSystem
   attr_accessor :level_caps
+  attr_accessor :difficulty
   alias initialize_caps initialize
   def initialize
     initialize_caps
     @level_caps = 0 #Level caps set to on by default
+    @difficulty = 1 #Difficulty set to Normal by default
   end
 end
 
@@ -37,6 +39,16 @@ MenuHandlers.add(:options_menu, :level_caps, {
   "condition"   => proc { next Settings::LEVEL_CAP_SWITCH },
   "get_proc"    => proc { next $PokemonSystem.level_caps},
   "set_proc"    => proc { |value, _sceme| $PokemonSystem.level_caps = value }
+})
+
+MenuHandlers.add(:options_menu, :difficulty, {
+  "name"        => _INTL("Difficulty"),
+  "order"       => 95,
+  "type"        => EnumOption,
+  "parameters"  => [_INTL("Easy"), _INTL("Normal"), _INTL("Hard"), _INTL("Insane")],
+  "description" => _INTL("Set the Difficulty level."),
+  "get_proc"    => proc { next $PokemonSystem.difficulty},
+  "set_proc"    => proc { |value, _sceme| $PokemonSystem.difficulty = value }
 })
 
 class Game_System

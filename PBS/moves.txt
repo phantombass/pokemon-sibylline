@@ -8810,3 +8810,15 @@ Flags = CanProtect,CanMirrorMove
 EffectChance = 20
 Description = The target is struck with an icy-cold beam of energy. It may also cause frostbite.
 #-------------------------------
+[POLARITYPULSE]
+Name = Polarity Pulse
+Type = STEEL
+Category = Special
+Power = 95
+Accuracy = 100
+TotalPP = 10
+Target = AllNearFoes
+FunctionCode = SuperEffectiveAgainstElectric
+Flags = CanProtect,CanMirrorMove,Sound
+Description = The user scrapes metal that disturbs polarity. Super-effective on Electric-types.
+#-------------------------------

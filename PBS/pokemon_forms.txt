@@ -2345,6 +2345,7 @@ Pokedex = It unfailingly catches prey in darkness. Noctowl owe their success to 
 Generation = 2
 #-------------------------------
 [CHIKORITA,1]
+FormName = Talinian Chikorita
 Types = GRASS
 BaseStats = 50,50,65,30,50,65
 GenderRatio = FemaleOneEighth
@@ -2419,6 +2420,7 @@ Pokedex = The fragrance of a Meganium's flower soothes and calms emotions. In ba
 Generation = 2
 #-------------------------------
 [LITTEN,1]
+FormName = Talinian Litten
 Types = FIRE
 BaseStats = 30,60,55,75,35,55
 GenderRatio = FemaleOneEighth
@@ -2493,6 +2495,7 @@ Pokedex = Although it's rough mannered and egotistical, it finds beating down un
 Generation = 7
 #-------------------------------
 [SQUIRTLE,2]
+FormName = Talinian Squirtle
 Types = WATER
 BaseStats = 60,40,50,35,75,50
 GenderRatio = FemaleOneEighth
@@ -2729,4 +2732,56 @@ Evolutions = BRAVIARY,HoldItem,METALCOAT
 [ARROKUDA,1]
 Generation = 8
 Evolutions = BARRASKEWDA,HoldItem,METALCOAT
+#-------------------------------
+[BIDOOF,1]
+FormName = Talinian Bidoof
+Types = GRASS
+BaseStats = 59,45,40,31,35,40
+GenderRatio = Female50Percent
+GrowthRate = Medium
+BaseExp = 50
+EVs = HP,1
+CatchRate = 255
+Happiness = 50
+Abilities = SIMPLE,SAPSIPPER
+HiddenAbilities = GRASSYSURGE
+Moves = 1,VINEWHIP,1,GROWL,5,DEFENSECURL,9,ROLLOUT,13,BULLETSEED,17,LEECHSEED,21,YAWN,25,CRUNCH,29,SEEDBOMB,33,SUPERFANG,37,SWORDSDANCE,41,AMNESIA,45,POWERWHIP,49,CURSE
+TutorMoves = GRASSYGLIDE,GIGADRAIN,SEEDBOMB,AQUATAIL,ATTRACT,BLIZZARD,CHARGEBEAM,CONFIDE,COVET,CUT,DIG,DOUBLETEAM,ECHOEDVOICE,ENDURE,FACADE,FRUSTRATION,GRASSKNOT,HIDDENPOWER,ICEBEAM,ICYWIND,IRONTAIL,LASTRESORT,PLUCK,PROTECT,RAINDANCE,REST,RETURN,ROCKSMASH,ROUND,SHADOWBALL,SHOCKWAVE,SLEEPTALK,SNORE,STEALTHROCK,SUBSTITUTE,SUNNYDAY,SUPERFANG,SUPERPOWER,SWAGGER,SWORDSDANCE,TAUNT,THIEF,THUNDER,THUNDERBOLT,THUNDERWAVE,WORKUP
+EggMoves = STOMPINGTANTRUM,DEFENSECURL,GRASSYGLIDE,FURYSWIPES,QUICKATTACK,ROLLOUT,SKULLBASH,SUPERFANG
+EggGroups = Water1,Field
+HatchSteps = 3840
+Height = 0.5
+Weight = 20.0
+Color = Brown
+Shape = Quadruped
+Category = Plump Mouse
+Pokedex = With nerves of steel, nothing can perturb it. It is more agile and active than it appears.
+Generation = 4
+Evolutions = BIBAREL,Level,15
+#-------------------------------
+[DUNSPARCE,1]
+FormName = Talinian Dunsparce
+Types = GHOST,FAIRY
+BaseStats = 100,70,70,45,65,65
+GenderRatio = Female50Percent
+GrowthRate = Medium
+BaseExp = 145
+EVs = HP,1
+CatchRate = 190
+Happiness = 50
+Abilities = PIXILATE
+HiddenAbilities = COMPOSURE
+Moves = 1,FLAIL,1,DEFENSECURL,4,FAIRYWIND,8,SHADOWSNEAK,12,GLARE,16,SCREECH,20,ANCIENTPOWER,24,DRAININGKISS,28,YAWN,32,BODYSLAM,36,HYPERVOICE,40,ROOST,44,SHADOWBALL,48,COIL,52,DOUBLEEDGE,56,BOOMBURST,62,SPECTRALSHRIEK
+TutorMoves = WILLOWISP,AGILITY,AIRSLASH,AMNESIA,ATTRACT,BATONPASS,BLIZZARD,BODYSLAM,BULLDOZE,CALMMIND,CHARGEBEAM,DAZZLINGGLEAM,DIG,DOUBLETEAM,DREAMEATER,DRILLRUN,DUALWINGBEAT,EARTHQUAKE,ENDURE,FACADE,FIREBLAST,FLAMETHROWER,GYROBALL,HELPINGHAND,HEX,HIDDENPOWER,ICEBEAM,IRONTAIL,POISONJAB,PROTECT,PSYCHUP,RAINDANCE,REST,RETALIATE,ROCKSLIDE,ROCKSMASH,ROCKTOMB,ROOST,ROUND,SCALESHOT,SCREECH,SHADOWBALL,SHOCKWAVE,SKITTERSMACK,SLEEPTALK,SNORE,SOLARBEAM,STEALTHROCK,STOMPINGTANTRUM,STOREDPOWER,STRENGTH,SUBSTITUTE,SUNNYDAY,SWAGGER,TERRAINPULSE,THIEF,THUNDER,THUNDERBOLT,THUNDERWAVE,WATERPULSE,WILDCHARGE,ZENHEADBUTT
+EggMoves = AGILITY,ANCIENTPOWER,AQUATAIL,ASTONISH,BITE,CURSE,HEADBUTT,HEX,LASTRESORT,MAGICCOAT,SNORE,MOONBLAST,STRENGTHSAP
+EggGroups = Field
+HatchSteps = 5120
+Height = 1.5
+Weight = 14.0
+Color = Yellow
+Shape = Serpentine
+Habitat = Cave
+Category = Land Snake
+Pokedex = Its drill-tipped tail is used to burrow into the ground backwards. This Pokémon is known to make its nest in complex shapes deep under the ground.
+Generation = 2
 #-------------------------------

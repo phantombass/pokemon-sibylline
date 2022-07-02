@@ -5117,7 +5117,7 @@ Description = The target is stomped with a big foot. It may also make the target
 #-------------------------------
 [COVET]
 Name = Covet
-Type = NORMAL
+Type = FAIRY
 Category = Physical
 Power = 60
 Accuracy = 100
@@ -5483,7 +5483,7 @@ Description = The target is slapped repeatedly, back and forth, two to five time
 #-------------------------------
 [FURYATTACK]
 Name = Fury Attack
-Type = NORMAL
+Type = FLYING
 Category = Physical
 Power = 15
 Accuracy = 85

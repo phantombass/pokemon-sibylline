@@ -13,6 +13,16 @@ Pokemon = CHINGLING,5
 LoseText = Wow, you're strong!
 Pokemon = HOOTHOOT,5
 #-------------------------------
+[CAMPER,Jimmy]
+LoseText = They're comfy and easy to wear!
+Pokemon = BIDOOF,5
+	Form = 1
+#-------------------------------
+[PICNICKER,Malorie]
+LoseText = Test complete!
+Pokemon = DUNSPARCE,5
+	Form = 1
+#-------------------------------
 [COOLTRAINER_F,Ashley]
 LoseText = Oh that's a first...
 Pokemon = PIKACHU,7

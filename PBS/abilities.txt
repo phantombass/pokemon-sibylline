@@ -1077,7 +1077,7 @@ Description = Immune to Water-type moves. Heals HP in Rain.
 #-------------------------------
 [GROWTHINSTINCT]
 Name = Growth Instinct
-Description = Boosts Defense to counter opponent's strongest stat.
+Description = Boosts defenses to counter opponent's strongest stat.
 #-------------------------------
 [SCALER]
 Name = Scaler
@@ -1085,7 +1085,7 @@ Description = Immune to Rock-type moves, Stealth Rocks and Sandstorm.
 #-------------------------------
 [HUNTERSINSTINCT]
 Name = Hunters Instinct
-Description = All of this Pokémon's attacks ignore resistances.
+Description = Ignores opponent's resistances.
 #-------------------------------
 [DEFROST]
 Name = Defrost
@@ -1093,7 +1093,7 @@ Description = Immune to Ice-type moves and Hail damage.
 #-------------------------------
 [SURVIVALINSTINCT]
 Name = Survival Instinct
-Description = Resists all non-super effective attacks.
+Description = Neutral hits are resisted.
 #-------------------------------
 [HAUNTED]
 Name = Haunted
@@ -1118,3 +1118,7 @@ Description = Boosts all Ground-type moves on the field.
 [FORESTSSECRETS]
 Name = Forest's Secrets
 Description = Boosts Special Attack, but allows only one move to be used.
+#-------------------------------
+[COMPOSURE]
+Name = Composure
+Description = Doubles Special Attack.

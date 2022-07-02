@@ -9,7 +9,7 @@ MultipleForms.register(:HOOTHOOT, {
   }
 })
 
-MultipleForms.copy(:HOOTHOOT,:CHIKORITA,:LITTEN,:MANKEY,:JOLTIK,:POLIWAG)
+MultipleForms.copy(:HOOTHOOT,:CHIKORITA,:LITTEN,:MANKEY,:JOLTIK,:POLIWAG,:RUFFLET)
 
 MultipleForms.register(:SQUIRTLE, {
   "getForm" => proc { |pkmn|

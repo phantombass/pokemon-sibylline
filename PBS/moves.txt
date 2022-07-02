@@ -5117,7 +5117,7 @@ Description = The target is stomped with a big foot. It may also make the target
 #-------------------------------
 [COVET]
 Name = Covet
-Type = NORMAL
+Type = FAIRY
 Category = Physical
 Power = 60
 Accuracy = 100
@@ -5483,7 +5483,7 @@ Description = The target is slapped repeatedly, back and forth, two to five time
 #-------------------------------
 [FURYATTACK]
 Name = Fury Attack
-Type = NORMAL
+Type = FLYING
 Category = Physical
 Power = 15
 Accuracy = 85
@@ -8809,4 +8809,16 @@ FunctionCode = FreezeTarget
 Flags = CanProtect,CanMirrorMove
 EffectChance = 20
 Description = The target is struck with an icy-cold beam of energy. It may also cause frostbite.
+#-------------------------------
+[POLARITYPULSE]
+Name = Polarity Pulse
+Type = STEEL
+Category = Special
+Power = 95
+Accuracy = 100
+TotalPP = 10
+Target = AllNearFoes
+FunctionCode = SuperEffectiveAgainstElectric
+Flags = CanProtect,CanMirrorMove,Sound
+Description = The user scrapes metal that disturbs polarity. Super-effective on Electric-types.
 #-------------------------------

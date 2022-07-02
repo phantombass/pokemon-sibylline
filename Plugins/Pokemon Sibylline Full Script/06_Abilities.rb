@@ -1,3 +1,10 @@
+module Battle::AbilityEffects
+  Instinct                      = AbilityHandlerHash.new
+  def self.triggerInstinct(ability, battler, battle, end_of_battle)
+    Instinct.trigger(ability, battler, battle, end_of_battle)
+  end
+end
+
 class Battle::Battler
   def pbInitEffects(batonPass)
     if batonPass
@@ -292,41 +299,6 @@ class Battle::Battler
     # Belch
     return false if !move.pbCanChooseMove?(self, commandPhase, showMessages)
     return true
-  end
-  def pbAbilitiesOnSwitchOut
-    if abilityActive?
-      Battle::AbilityEffects.triggerOnSwitchOut(self.ability, self, false)
-    end
-    if ability_orb_held? && hasActiveAbility?(:NEUTRALIZINGGAS)
-      Battle::ItemEffects.triggerOnSwitchIn(self.item,self,false)
-    end
-    # Reset form
-    @battle.peer.pbOnLeavingBattle(@battle, @pokemon, @battle.usedInBattle[idxOwnSide][@index / 2])
-    # Treat self as fainted
-    @hp = 0
-    @fainted = true
-    # Check for end of Neutralizing Gas/Unnerve
-    pbAbilitiesOnNeutralizingGasEnding if hasActiveAbility?(:NEUTRALIZINGGAS, true)
-    pbItemsOnUnnerveEnding if (hasActiveAbility?(:UNNERVE, true) || hasActiveItem?(:UNNERVEORB))
-    # Check for end of primordial weather
-    @battle.pbEndPrimordialWeather
-  end
-
-  def pbAbilitiesOnFainting
-    # Self fainted; check all other battlers to see if their abilities trigger
-    @battle.pbPriority(true).each do |b|
-      next if !b || !b.abilityActive?
-      Battle::AbilityEffects.triggerChangeOnBattlerFainting(b.ability, b, self, @battle)
-    end
-    @battle.pbPriority(true).each do |b|
-      next if !b || !b.abilityActive?
-      Battle::AbilityEffects.triggerOnBattlerFainting(b.ability, b, self, @battle)
-    end
-    pbAbilitiesOnNeutralizingGasEnding if hasActiveAbility?(:NEUTRALIZINGGAS, true)
-    if ability_orb_held? && hasActiveAbility?(:NEUTRALIZINGGAS)
-      Battle::ItemEffects.triggerOnSwitchIn(self.item,self,false)
-    end
-    pbItemsOnUnnerveEnding if (hasActiveAbility?(:UNNERVE, true) || hasActiveItem?(:UNNERVEORB))
   end
   def pbRecoverHP(amt, anim = true, anyAnim = true)
     if amt == true
@@ -1412,5 +1384,81 @@ Battle::AbilityEffects::OnSwitchIn.add(:GAIAFORCE,
 Battle::AbilityEffects::DamageCalcFromUser.add(:FORESTSSECRETS,
   proc { |ability, user, target, move, mults, baseDmg, type|
     mults[:attack_multiplier] *= 1.5 if move.specialMove?
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromUser.add(:COMPOSURE,
+  proc { |ability, user, target, move, mults, baseDmg, type|
+    mults[:attack_multiplier] *= 2 if move.specialMove?
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromUser.add(:SURVIVALINSTINCT,
+  proc { |ability, user, target, move, mults, baseDmg, type|
+    if !target.hasActiveAbility?(:HUNTERSINSTINCT)
+      mults[:final_damage_multiplier] /= 2 if Effectiveness.normal?(target.damageState.typeMod)
+    end
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromUser.add(:HUNTERSINSTINCT,
+  proc { |ability, user, target, move, mults, baseDmg, type|
+    if !target.hasActiveAbility?(:SURVIVALINSTINCT)
+      mults[:final_damage_multiplier] *= 2 if Effectiveness.resistant?(target.damageState.typeMod)
+    end
+  }
+)
+
+Battle::AbilityEffects::OnSwitchIn.add(:HUNTERSINSTINCT,
+  proc { |ability, battler, battle, switch_in|
+    battle.pbShowAbilitySplash(battler)
+    if battle.pbCheckGlobalAbility(:SURVIVALINSTINCT)
+      battle.pbDisplay(_INTL("Both Instincts were neutralized!"))
+    else
+      battle.pbDisplay(_INTL("{1}'s has the {2}!", battler.pbThis, battler.abilityName))
+    end
+    battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::OnSwitchIn.add(:SURVIVALINSTINCT,
+  proc { |ability, battler, battle, switch_in|
+    battle.pbShowAbilitySplash(battler)
+    if battle.pbCheckGlobalAbility(:HUNTERSINSTINCT)
+      battle.pbDisplay(_INTL("Both Instincts were neutralized!"))
+    else
+      battle.pbDisplay(_INTL("{1}'s has the {2}!", battler.pbThis, battler.abilityName))
+    end
+    battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::Instinct.add(:HUNTERSINSTINCT,
+  proc { |ability, battler, battle, endOfBattle|
+    next if endOfBattle
+    battle.pbShowAbilitySplash(battler)
+    battle.pbDisplay(_INTL("{1}'s {2} has returned!",battler.pbThis,battler.abilityName))
+    battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::Instinct.add(:SURVIVALINSTINCT,
+  proc { |ability, battler, battle, endOfBattle|
+    next if endOfBattle
+    battle.pbShowAbilitySplash(battler)
+    battle.pbDisplay(_INTL("{1}'s {2} has returned!",battler.pbThis,battler.abilityName))
+    battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::OnSwitchIn.add(:GROWTHINSTINCT,
+  proc { |ability, battler, battle, switch_in|
+    oAtk = oSpA = 0
+    battle.allOtherSideBattlers(battler.index).each do |b|
+      oAtk   += b.attack
+      oSpA += b.spatk
+    end
+    stat = (oAtk > oSpA) ? :DEFENSE : :SPECIAL_DEFENSE
+    battler.pbRaiseStatStageByAbility(stat, 1, battler)
   }
 )

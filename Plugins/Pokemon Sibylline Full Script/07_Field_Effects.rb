@@ -1119,7 +1119,7 @@ class Battle::Scene
         :DRAGON   => [:DRAGONCLAW,   :DRAGONRAGE,   :DRAGONDANCE, nil,         :TWISTER,      nil],
         :DARK     => [:PURSUIT,      :DARKPULSE,    :HONECLAWS,   nil,         :SNARL,        :EMBARGO],
         :FAIRY    => [:TACKLE,       :FAIRYWIND,    :MOONLIGHT,   nil,         :SWIFT,        :SWEETKISS],
-        :SOUND    => [:FALSESWIPE,   :ECHOEDVOICE,  nil,          nil,         :HYPERVOICE,   nil]
+        :SOUND    => [:FALSESWIPE,   :ECHOEDVOICE,  :HOWL,        nil,         :HYPERVOICE,   nil]
       }
       if typeDefaultAnim[moveType]
         anims = typeDefaultAnim[moveType]

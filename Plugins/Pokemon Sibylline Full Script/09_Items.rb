@@ -226,7 +226,10 @@ class Battle::Battler
       :SHADOWGUARDORB,
       :HAUNTEDORB,
       :ILLUMINATEORB,
-      :LEVITATEORB
+      :LEVITATEORB,
+      :CACOPHONYORB,
+      :MAGICBOUNCEORB,
+      :AMPLIFIERORB
     ]
     return item_list.include?(item.id)
   end
@@ -248,9 +251,27 @@ class Battle::Battler
     end
     return true
   end
+  def both_instincts_active?
+    if @battle.pbCheckGlobalAbility(:HUNTERSINSTINCT) && @battle.pbCheckGlobalAbility(:SURVIVALINSTINCT)
+      return true
+    else
+      return false
+    end
+  end
+  def pbAbilitiesOnInstinctEnding
+    return if both_instincts_active?
+    @battle.pbPriority(true).each do |b|
+      next if b.fainted?
+      next if !b.unstoppableAbility? && !b.abilityActive?
+      Battle::AbilityEffects.triggerInstinct(b.ability, b, @battle, false)
+    end
+  end
   def pbAbilitiesOnSwitchOut
     if abilityActive?
       Battle::AbilityEffects.triggerOnSwitchOut(self.ability, self, false)
+    end
+    if ability_orb_held?(self.item) && hasActiveAbility?(:NEUTRALIZINGGAS)
+      Battle::ItemEffects.triggerOnSwitchIn(self.item,self,false)
     end
     # Reset form
     @battle.peer.pbOnLeavingBattle(@battle, @pokemon, @battle.usedInBattle[idxOwnSide][@index / 2])
@@ -259,8 +280,8 @@ class Battle::Battler
     @fainted = true
     # Check for end of Neutralizing Gas/Unnerve
     pbAbilitiesOnNeutralizingGasEnding if hasActiveAbility?(:NEUTRALIZINGGAS, true)
-    pbItemsOnUnnerveEnding if hasActiveAbility?(:UNNERVE, true)
-    pbItemsOnUnnerveEnding if hasActiveItem?(:UNNERVEORB, true)
+    pbItemsOnUnnerveEnding if (hasActiveAbility?(:UNNERVE, true) || hasActiveItem?(:UNNERVEORB))
+    pbAbilitiesOnInstinctEnding if (hasActiveAbility?(:HUNTERSINSTINCT,true) || hasActiveAbility?(:SURVIVALINSTINCT,true))
     # Check for end of primordial weather
     @battle.pbEndPrimordialWeather
   end
@@ -276,9 +297,11 @@ class Battle::Battler
       Battle::AbilityEffects.triggerOnBattlerFainting(b.ability, b, self, @battle)
     end
     pbAbilitiesOnNeutralizingGasEnding if hasActiveAbility?(:NEUTRALIZINGGAS, true)
-    pbAbilitiesOnNeutralizingGasEnding if hasActiveItem?(:NEUTRALIZINGGASORB, true)
-    pbItemsOnUnnerveEnding if hasActiveAbility?(:UNNERVE, true)
-    pbItemsOnUnnerveEnding if hasActiveItem?(:UNNERVEORB, true)
+    if ability_orb_held?(self.item) && hasActiveAbility?(:NEUTRALIZINGGAS)
+      Battle::ItemEffects.triggerOnSwitchIn(self.item,self,false)
+    end
+    pbItemsOnUnnerveEnding if (hasActiveAbility?(:UNNERVE, true) || hasActiveItem?(:UNNERVEORB))
+    pbAbilitiesOnInstinctEnding if (hasActiveAbility?(:HUNTERSINSTINCT,true) || hasActiveAbility?(:SURVIVALINSTINCT,true))
   end
   def pbRemoveItem(permanent = true)
     @effects[PBEffects::ChoiceBand] = nil if (!hasActiveAbility?(:GORILLATACTICS) || !hasActiveAbility?(:FORESTSSECRETS))

@@ -1317,3 +1317,11 @@ class Battle::Move::UserTargetSwapItems < Battle::Move
     target.pbHeldItemTriggerCheck
   end
 end
+
+#Polarity Pulse
+class Battle::Move::SuperEffectiveAgainstElectric < Battle::Move
+  def pbCalcTypeModSingle(moveType,defType,user,target)
+    return Effectiveness::SUPER_EFFECTIVE_ONE if defType == :ELECTRIC
+    return super
+  end
+end

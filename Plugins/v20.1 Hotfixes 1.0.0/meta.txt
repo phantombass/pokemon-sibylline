@@ -1,0 +1,24 @@
+﻿Name       = v20.1 Hotfixes
+Version    = 1.0.0
+Essentials = 20.1
+Conflicts  = v19 Hotfixes
+Conflicts  = v19.1 Updates
+Conflicts  = v20 Hotfixes
+Website    = https://github.com/Maruno17/pokemon-essentials
+Credits    = Maruno
+#=====================================================================
+# Change log
+#=====================================================================
+#
+# 1.0.0:
+# - Fixed Heavy Ball's catch rate calculation being inaccurate.
+# - Added Obstruct to the blacklists of Assist and Copycat.
+# - Fixed mispositioning of text in Debug features that edit Game
+#   Switches and Game Variables.
+# - Fixed the "See ya!" option in the PC menu not working properly.
+# - Fixed Pokémon icons sometimes disappearing in Pokémon storage
+#   screen.
+# - Fixed playing the credits/changing $scene leaving a ghost image of
+#   the old map behind.
+#
+#=====================================================================

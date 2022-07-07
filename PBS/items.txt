@@ -6135,3 +6135,12 @@ Flags = Fling_90
 Move = ECHOEDVOICE
 Description = The user attacks the foe with an echoing voice. If this move is used every turn, it does greater damage.
 #-------------------------------
+[HMCATALOGUE]
+Name = HM Catalogue
+NamePlural = Rotom Catalogues
+Pocket = 8
+Price = 0
+FieldUse = Direct
+Flags = KeyItem
+Description = ,"A catalog of devices that allows Trainers to use HMs in the field
+#-------------------------------

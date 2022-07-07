@@ -377,6 +377,52 @@ class Battle::Move
       if target.pbHasType?(:GHOST) && target.hp == target.totalhp
         multipliers[:final_damage_multiplier] /= 2
       end
+    when :Garden
+      case type
+      when :FAIRY, :BUG, :GRASS
+        multipliers[:final_damage_multiplier] *= 1.2
+        @battle.pbDisplay(_INTL("The garden strengthened the attack!"))
+      when :FIRE
+        if user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
+          @battle.pbDisplay(_INTL("The city caught fire!"))
+          $field_effect_bg = "fire"
+          @battle.scene.pbRefreshEverything
+          @battle.field.field_effects = :Fire
+          @battle.pbDisplay(_INTL("The field is ablaze."))
+        end
+      when :FLYING
+        if user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
+          @battle.pbDisplay(_INTL("The attack kicked up spores!"))
+          spore = rand(10)
+          spore2 = rand(10)
+          case spore
+          when 0
+            user.status = :PARALYSIS
+            @battle.pbDisplay(_INTL("{1} was paralyzed!",user.pbThis))
+          when 3
+            user.status = :POISON
+            @battle.pbDisplay(_INTL("{1} was poisoned!",user.pbThis))
+          when 6
+            user.status = :SLEEP
+            @battle.pbDisplay(_INTL("{1} became drowsy!",user.pbThis))
+          when 1,2,4,5,7,8,9
+            @battle.pbDisplay(_INTL("The spores had no effect on {1}!",user.pbThis))
+          end
+          case spore2
+          when 0
+            target.status = :PARALYSIS
+            @battle.pbDisplay(_INTL("{1} was paralyzed!",target.pbThis))
+          when 3
+            target.status = :POISON
+            @battle.pbDisplay(_INTL("{1} was poisoned!",target.pbThis))
+          when 6
+            target.status = :SLEEP
+            @battle.pbDisplay(_INTL("{1} became drowsy!",target.pbThis))
+          when 1,2,4,5,7,8,9
+            @battle.pbDisplay(_INTL("The spores had no effect on {1}!",target.pbThis))
+          end
+        end
+      end
     end
     # Critical hits
     if target.damageState.critical

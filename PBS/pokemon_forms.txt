@@ -2727,11 +2727,11 @@ Evolutions = POLIWHIRL,Level,25
 #-------------------------------
 [RUFFLET,1]
 Generation = 5
-Evolutions = BRAVIARY,HoldItem,METALCOAT
+Evolutions = BRAVIARY,HoldItemLevel30,METALCOAT
 #-------------------------------
 [ARROKUDA,1]
 Generation = 8
-Evolutions = BARRASKEWDA,HoldItem,METALCOAT
+Evolutions = BARRASKEWDA,HoldItemLevel30,METALCOAT
 #-------------------------------
 [BIDOOF,1]
 FormName = Talinian Bidoof

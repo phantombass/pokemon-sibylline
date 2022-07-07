@@ -453,6 +453,7 @@ MenuHandlers.add(:options_menu, :battle_style, {
   "type"        => EnumOption,
   "parameters"  => [_INTL("Switch"), _INTL("Set")],
   "description" => _INTL("Choose whether you can switch Pokémon when an opponent's Pokémon faints."),
+  "condition"   => proc { next $PokemonSystem.difficulty < 2 },
   "get_proc"    => proc { next $PokemonSystem.battlestyle },
   "set_proc"    => proc { |value, _scene| $PokemonSystem.battlestyle = value }
 })

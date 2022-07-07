@@ -3,7 +3,7 @@
 [0]
 StartMoney = 3000
 StartItemStorage = BERRYJUICE
-Home = 3,7,5,8
+Home = 33,45,15,2
 StorageCreator = Bill
 WildBattleBGM = Battle wild
 TrainerBattleBGM = Battle trainer

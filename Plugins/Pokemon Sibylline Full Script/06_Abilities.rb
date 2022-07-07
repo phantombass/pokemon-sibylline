@@ -1046,6 +1046,13 @@ class Battle::Battler
       return false
     end
   end
+  def affectedByGarden?
+    if pbHasType?(:FAIRY) || pbHasType?(:GRASS) || pbHasType?(:BUG)
+      return true
+    else
+      return false
+    end
+  end
   def pbEffectsOnMakingHit(move, user, target)
     if target.damageState.calcDamage > 0 && !target.damageState.substitute
       # Target's ability

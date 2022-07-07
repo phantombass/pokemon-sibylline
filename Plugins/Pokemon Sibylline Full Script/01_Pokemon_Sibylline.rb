@@ -22,11 +22,15 @@ end
 class PokemonSystem
   attr_accessor :level_caps
   attr_accessor :difficulty
+  attr_accessor :nuzlocke
+  attr_accessor :min_grinding
   alias initialize_caps initialize
   def initialize
     initialize_caps
     @level_caps = 0 #Level caps set to on by default
     @difficulty = 1 #Difficulty set to Normal by default
+    @nuzlocke = 0 #Nuzlocke mode set to Off by default
+    @min_grinding = 0 #Minimal Grinding set to Off by default
   end
 end
 
@@ -36,7 +40,7 @@ MenuHandlers.add(:options_menu, :level_caps, {
   "type"        => EnumOption,
   "parameters"  => [_INTL("On"), _INTL("Off")],
   "description" => _INTL("Choose whether you will have hard level caps."),
-  "condition"   => proc { next Settings::LEVEL_CAP_SWITCH },
+  "condition"   => proc { next $PokemonSystem.difficulty < 2 },
   "get_proc"    => proc { next $PokemonSystem.level_caps},
   "set_proc"    => proc { |value, _sceme| $PokemonSystem.level_caps = value }
 })

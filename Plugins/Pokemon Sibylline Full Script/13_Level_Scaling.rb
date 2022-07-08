@@ -46,6 +46,12 @@ EventHandlers.add(:on_trainer_load, :level_scale,
         end
         pokemon.level = level
         pokemon.calc_stats
+        if $PokemonSystem.difficulty == 0
+          trainer.skill_level -= 150
+          if $game_switches[LevelScale::GYM_SWITCH]
+            trainer.skill_level += 50
+          end
+        end
         if !$game_switches[LevelScale::GYM_SWITCH] && !$game_switches[LevelScale::RIVAL_SWITCH] && !$game_switches[LevelScale::TRAINER_SWITCH]
           pokemon.reset_moves
         end

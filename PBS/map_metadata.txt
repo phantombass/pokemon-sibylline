@@ -431,3 +431,10 @@ Outdoor = true
 ShowArea = true
 MapPosition = 0,8,4
 SnapEdges = true
+#-------------------------------
+[080]   # Pana City
+Name = Pana City
+Outdoor = true
+ShowArea = true
+MapPosition = 0,10,4
+SnapEdges = true

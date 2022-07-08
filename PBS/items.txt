@@ -6135,3 +6135,29 @@ Flags = Fling_90
 Move = ECHOEDVOICE
 Description = The user attacks the foe with an echoing voice. If this move is used every turn, it does greater damage.
 #-------------------------------
+[HMCATALOGUE]
+Name = HM Catalogue
+NamePlural = Rotom Catalogues
+Pocket = 8
+Price = 0
+FieldUse = Direct
+Flags = KeyItem
+Description = ,"A catalog of devices that allows Trainers to use HMs in the field
+#-------------------------------
+[THICKFATORB]
+Name = Thick Fat Orb
+NamePlural = Thick Fat Orbs
+Pocket = 9
+Price = 4000
+Flags = Fling_130
+Description = A Pokémon held item that grants the holder a second ability of Thick Fat.
+#-------------------------------
+[PIXIEDUST]
+Name = Pixie Dust
+NamePlural = Pixie Dusts
+Pocket = 1
+Price = 3000
+FieldUse = OnPokemon
+Flags = EvolutionStone,Fling_30
+Description = A peculiar pouch of dust that makes certain species of Pokémon evolve. It sparkles brightly.
+#-------------------------------

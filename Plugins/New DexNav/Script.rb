@@ -418,8 +418,21 @@ class NewDexNav
       maps = GameData::MapMetadata.try_get($game_map.map_id)   # Map IDs for Zharonian Forme
       form = 0
       form = form
+      itemRand = rand(3)
       navRand = rand(3)
       $game_variables[400] = navRand
+      navItemCommon = GameData::Species.get(searchmon).wild_item_common
+      navItemUncommon = GameData::Species.get(searchmon).wild_item_uncommon
+      navItemRare = GameData::Species.get(searchmon).wild_item_rare
+      case itemRand
+      when 0
+        $game_variables[401] = navItemCommon
+      when 1
+        $game_variables[401] = navItemUncommon
+      when 2
+        $game_variables[401] = navItemRare
+      end
+      navItem = $game_variables[401]
       navAbil1 = GameData::Species.get_species_form(searchmon,form).abilities
       hAbil = GameData::Species.get_species_form(searchmon,form).hidden_abilities
       hAbil = hAbil.length == 0 ? GameData::Species.get_species_form(searchmon,form).abilities : GameData::Species.get_species_form(searchmon,form).hidden_abilities
@@ -450,6 +463,9 @@ class NewDexNav
         @sprites["searchIcon"] = PokemonSpeciesIconSprite.new(searchpic,@viewport3)
       else
         @sprites["searchIcon"] = PokemonSpeciesIconSprite.new(searchmon,@viewport3)
+      end
+      if navItem[0] != nil
+        @sprites["item"] = ItemIconSprite.new(440,65,navItem[0],@viewport3)
       end
       @sprites["searchIcon"].x = 450
       @sprites["searchIcon"].y = 65
@@ -616,7 +632,9 @@ EventHandlers.add(:on_wild_pokemon_created, :dexnav_chain,
         else
           pokemon.level = pokemon.level
         end
+        itemNav = $game_variables[401]
         pokemon.name=GameData::Species.get(pokemon.species).name
+        pokemon.item = itemNav[0]
         pokemon.ability_index = $game_variables[NavNums::Ability]
         maps = GameData::MapMetadata.try_get($game_map.map_id)
         if $chain >= 0
@@ -660,6 +678,7 @@ EventHandlers.add(:on_wild_pokemon_created, :dexnav_chain,
           end
         end
         pokemon.reset_moves
+        pokemon.calc_stats
         if pokemon.moves[1] == nil
           pokemon.moves[1]=Pokemon::Move.new($currentDexSearch[1]) if $currentDexSearch[1]
         elsif pokemon.moves[1] != nil && pokemon.moves[2] == nil

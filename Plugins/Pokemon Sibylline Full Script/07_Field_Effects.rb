@@ -74,6 +74,11 @@ GameData::FieldEffects.register({
   :name      => _INTL("Ruins"),
 })
 
+GameData::FieldEffects.register({
+  :id        => :Garden,
+  :name      => _INTL("Garden"),
+})
+
 GameData::Environment.register({
   :id   => :EchoChamber,
   :name => _INTL("Echo Chamber"),
@@ -114,6 +119,12 @@ GameData::Environment.register({
   :id          => :Ruins,
   :name        => _INTL("Ruins"),
   :battle_base => "rocky"
+})
+
+GameData::Environment.register({
+  :id          => :Garden,
+  :name        => _INTL("Garden"),
+  :battle_base => "grass"
 })
 
 GameData::Environment.register({
@@ -200,6 +211,10 @@ class Game_Temp
       rules["environment"] = :Home
       $PokemonGlobal.nextBattleBack = "forest"
       $game_screen.field_effect(:Home)
+    when :Garden
+      rules["environment"] = :Garden
+      $PokemonGlobal.nextBattleBack = "field"
+      $game_screen.field_effect(:Garden)
     end
   end
 end
@@ -293,6 +308,8 @@ module BattleCreationHelperMethods
         battle.defaultField = :City
       when :Ruins
         battle.defaultField = :Ruins
+      when :Garden
+        battle.defaultField = :Garden
       end
     else
       battle.defaultField = battleRules["defaultField"]
@@ -365,6 +382,79 @@ class Battle::ActiveField
 end
 
 class Battle
+  def pbCanUseItemOnPokemon?(item, pkmn, battler, scene, showMessages = true)
+    if !pkmn || pkmn.egg?
+      scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+      return false
+    end
+    if $PokemonSystem.difficulty > 1
+      scene.pbDisplay(_INTL("Healing items cannot be used in battle."))
+      return false
+    end
+    # Embargo
+    if battler && battler.effects[PBEffects::Embargo] > 0
+      if showMessages
+        scene.pbDisplay(_INTL("Embargo's effect prevents the item's use on {1}!",
+                              battler.pbThis(true)))
+      end
+      return false
+    end
+    # Hyper Mode and non-Scents
+    if pkmn.hyper_mode && !GameData::Item.get(item)&.is_scent?
+      scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+      return false
+    end
+    return true
+  end
+  def pbItemMenu(idxBattler, firstAction)
+    if !@internalBattle || ($PokemonSystem.difficulty > 1 && @opposes)
+      pbDisplay(_INTL("Items can't be used here."))
+      return false
+    end
+    ret = false
+    @scene.pbItemMenu(idxBattler, firstAction) { |item, useType, idxPkmn, idxMove, itemScene|
+      next false if !item
+      battler = pkmn = nil
+      case useType
+      when 1, 2   # Use on Pokémon/Pokémon's move
+        next false if !ItemHandlers.hasBattleUseOnPokemon(item)
+        next false if $PokemonSystem.difficulty > 1
+        battler = pbFindBattler(idxPkmn, idxBattler)
+        pkmn    = pbParty(idxBattler)[idxPkmn]
+        next false if !pbCanUseItemOnPokemon?(item, pkmn, battler, itemScene)
+      when 3   # Use on battler
+        next false if !ItemHandlers.hasBattleUseOnBattler(item)
+        next false if $PokemonSystem.difficulty > 1
+        battler = pbFindBattler(idxPkmn, idxBattler)
+        pkmn    = battler.pokemon if battler
+        next false if !pbCanUseItemOnPokemon?(item, pkmn, battler, itemScene)
+      when 4   # Poké Balls
+        next false if idxPkmn < 0
+        battler = @battlers[idxPkmn]
+        pkmn    = battler.pokemon if battler
+      when 5   # No target (Poké Doll, Guard Spec., Launcher items)
+        next false if $PokemonSystem.difficulty > 1
+        battler = @battlers[idxBattler]
+        pkmn    = battler.pokemon if battler
+      else
+        next false
+      end
+      next false if !pkmn
+      next false if !ItemHandlers.triggerCanUseInBattle(item, pkmn, battler, idxMove,
+                                                        firstAction, self, itemScene)
+      next false if !pbRegisterItem(idxBattler, item, idxPkmn, idxMove)
+      ret = true
+      next true
+    }
+    return ret
+  end
+  def pbSybillineClauses
+    self.rules["sleepclause"] = true
+    self.rules["evasionclause"] = true
+    if $PokemonSystem.difficulty == 3
+      self.rules["batonpassclause"] = true
+    end
+  end
   def pbEORTerrainHealing(battler)
     return if battler.fainted?
     # Grassy Terrain (healing)
@@ -376,7 +466,12 @@ class Battle
     if @field.field_effects == :Ruins && battler.affectedByRuins? && battler.canHeal?
       PBDebug.log("[Lingering effect] Ruins field heals #{battler.pbThis(true)}")
       battler.pbRecoverHP(battler.totalhp / 16)
-      pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
+      pbDisplay(_INTL("{1}'s HP was restored by the power of the Ruins.", battler.pbThis))
+    end
+    if @field.field_effects == :Garden && battler.affectedByGarden? && battler.canHeal?
+      PBDebug.log("[Lingering effect] Garden field heals #{battler.pbThis(true)}")
+      battler.pbRecoverHP(battler.totalhp / 16)
+      pbDisplay(_INTL("{1}'s HP was restored by the Garden.", battler.pbThis))
     end
   end
   def defaultField=(value)
@@ -405,6 +500,8 @@ class Battle
       pbDisplay(_INTL("The city hums with activity."))
     when :Ruins
       pbDisplay(_INTL("There's an odd feeling in these ruins..."))
+    when :Garden
+      pbDisplay(_INTL("What a beautiful garden..."))
     end
     # Check for abilities/items that trigger upon the terrain changing
 #    allBattlers.each { |b| b.pbAbilityOnTerrainChange }
@@ -466,6 +563,15 @@ class Battle
     $cinders = 0
     $outage = false
     sendOuts = pbSetUpSides
+    olditems = []
+    pbParty(0).each_with_index do |pkmn,i|
+      item = pkmn.item_id
+      olditems.push(item)
+    end
+    $olditems = olditems
+    if $PokemonSystem.difficulty > 1
+      pbSybillineClauses
+    end
     # Create all the sprites and play the battle intro animation
     @scene.pbStartBattle(self)
     # Show trainers on both sides sending out Pokémon
@@ -514,6 +620,8 @@ class Battle
       pbDisplay(_INTL("The city hums with activity."))
     when :Ruins
       pbDisplay(_INTL("There's an odd feeling in these ruins..."))
+    when :Garden
+      pbDisplay(_INTL("What a beautiful garden..."))
     end
     # Abilities upon entering battle
     pbOnAllBattlersEnteringBattle
@@ -866,6 +974,111 @@ class Battle
     @field.effects[PBEffects::FusionBolt]  = false
     @field.effects[PBEffects::FusionFlare] = false
     @endOfRound = false
+  end
+  def pbEndOfBattle
+    oldDecision = @decision
+    @decision = 4 if @decision == 1 && wildBattle? && @caughtPokemon.length > 0
+    case oldDecision
+    ##### WIN #####
+    when 1
+      PBDebug.log("")
+      PBDebug.log("***Player won***")
+      if trainerBattle?
+        @scene.pbTrainerBattleSuccess
+        case @opponent.length
+        when 1
+          pbDisplayPaused(_INTL("You defeated {1}!", @opponent[0].full_name))
+        when 2
+          pbDisplayPaused(_INTL("You defeated {1} and {2}!", @opponent[0].full_name,
+                                @opponent[1].full_name))
+        when 3
+          pbDisplayPaused(_INTL("You defeated {1}, {2} and {3}!", @opponent[0].full_name,
+                                @opponent[1].full_name, @opponent[2].full_name))
+        end
+        @opponent.each_with_index do |trainer, i|
+          @scene.pbShowOpponent(i)
+          msg = trainer.lose_text
+          msg = "..." if !msg || msg.empty?
+          pbDisplayPaused(msg.gsub(/\\[Pp][Nn]/, pbPlayer.name))
+        end
+      end
+      # Gain money from winning a trainer battle, and from Pay Day
+      pbGainMoney if @decision != 4
+      # Hide remaining trainer
+      @scene.pbShowOpponent(@opponent.length) if trainerBattle? && @caughtPokemon.length > 0
+    ##### LOSE, DRAW #####
+    when 2, 5
+      PBDebug.log("")
+      PBDebug.log("***Player lost***") if @decision == 2
+      PBDebug.log("***Player drew with opponent***") if @decision == 5
+      if @internalBattle
+        pbDisplayPaused(_INTL("You have no more Pokémon that can fight!"))
+        if trainerBattle?
+          case @opponent.length
+          when 1
+            pbDisplayPaused(_INTL("You lost against {1}!", @opponent[0].full_name))
+          when 2
+            pbDisplayPaused(_INTL("You lost against {1} and {2}!",
+                                  @opponent[0].full_name, @opponent[1].full_name))
+          when 3
+            pbDisplayPaused(_INTL("You lost against {1}, {2} and {3}!",
+                                  @opponent[0].full_name, @opponent[1].full_name, @opponent[2].full_name))
+          end
+        end
+        # Lose money from losing a battle
+        pbLoseMoney
+        pbDisplayPaused(_INTL("You blacked out!")) if !@canLose
+      elsif @decision == 2   # Lost in a Battle Frontier battle
+        if @opponent
+          @opponent.each_with_index do |trainer, i|
+            @scene.pbShowOpponent(i)
+            msg = trainer.win_text
+            msg = "..." if !msg || msg.empty?
+            pbDisplayPaused(msg.gsub(/\\[Pp][Nn]/, pbPlayer.name))
+          end
+        end
+      end
+    ##### CAUGHT WILD POKÉMON #####
+    when 4
+      @scene.pbWildBattleSuccess if !Settings::GAIN_EXP_FOR_CAPTURE
+    end
+    # Register captured Pokémon in the Pokédex, and store them
+    pbRecordAndStoreCaughtPokemon
+    # Collect Pay Day money in a wild battle that ended in a capture
+    pbGainMoney if @decision == 4
+    # Pass on Pokérus within the party
+    if @internalBattle
+      infected = []
+      $player.party.each_with_index do |pkmn, i|
+        infected.push(i) if pkmn.pokerusStage == 1
+      end
+      infected.each do |idxParty|
+        strain = $player.party[idxParty].pokerusStrain
+        if idxParty > 0 && $player.party[idxParty - 1].pokerusStage == 0 && rand(3) == 0   # 33%
+          $player.party[idxParty - 1].givePokerus(strain)
+        end
+        if idxParty < $player.party.length - 1 && $player.party[idxParty + 1].pokerusStage == 0 && rand(3) == 0   # 33%
+          $player.party[idxParty + 1].givePokerus(strain)
+        end
+      end
+    end
+    # Clean up battle stuff
+    @scene.pbEndBattle(@decision)
+    @battlers.each do |b|
+      next if !b
+      pbCancelChoice(b.index)   # Restore unused items to Bag
+      Battle::AbilityEffects.triggerOnSwitchOut(b.ability, b, true) if b.abilityActive?
+    end
+    pbParty(0).each_with_index do |pkmn,i|
+      next if !pkmn
+      @peer.pbOnLeavingBattle(self,pkmn,@usedInBattle[0][i],true)   # Reset form
+      if @opponent && $PokemonSystem.difficulty > 1
+        pkmn.item = $olditems[i]
+      else
+        pkmn.item = @initialItems[0][i]
+      end
+    end
+    return @decision
   end
 end
 

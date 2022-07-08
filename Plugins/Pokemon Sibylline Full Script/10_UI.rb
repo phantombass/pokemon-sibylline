@@ -499,7 +499,6 @@ end
 MenuHandlers.add(:party_menu, :relearn, {
   "name"      => _INTL("Relearn Moves"),
   "order"     => 31,
-  "condition" => proc { |screen, party, party_idx| next party.length > 1 },
   "effect"    => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
     if pkmn.can_relearn_move?
@@ -513,7 +512,7 @@ MenuHandlers.add(:party_menu, :relearn, {
 MenuHandlers.add(:party_menu, :egg_moves, {
   "name"      => _INTL("Teach Egg Moves"),
   "order"     => 32,
-  "condition" => proc { |screen, party, party_idx| next party.length > 1 },
+  "condition"   => proc { next $PokemonSystem.min_grinding == 1 },
   "effect"    => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
     if pkmn.has_egg_move?
@@ -524,10 +523,229 @@ MenuHandlers.add(:party_menu, :egg_moves, {
   }
 })
 
+MenuHandlers.add(:party_menu, :min_grinding, {
+  "name"      => _INTL("Minimal Grinding..."),
+  "order"     => 33,
+  "condition"   => proc { next $PokemonSystem.min_grinding == 1 },
+  "effect"    => proc { |screen, party, party_idx|
+    @viewport1 = Viewport.new(0, 0, Graphics.width, Graphics.height)
+    @viewport1.z = 99999
+    $viewport_min = @viewport1
+    pkmn = party[party_idx]
+    @sprites = {}
+    pkmn_info = "Nature: #{pkmn.nature.name}\nAbility: #{pkmn.ability.name}\nEVs: #{pkmn.ev[:HP]},#{pkmn.ev[:ATTACK]},#{pkmn.ev[:DEFENSE]},#{pkmn.ev[:SPECIAL_ATTACK]},#{pkmn.ev[:SPECIAL_DEFENSE]},#{pkmn.ev[:SPEED]}\nIVs: #{pkmn.iv[:HP]},#{pkmn.iv[:ATTACK]},#{pkmn.iv[:DEFENSE]},#{pkmn.iv[:SPECIAL_ATTACK]},#{pkmn.iv[:SPECIAL_DEFENSE]},#{pkmn.iv[:SPEED]}"
+    $pkmn_data = pkmn_info
+    @sprites["scene"] = Window_AdvancedTextPokemon.newWithSize($pkmn_data,250,5,255,220,@viewport1)
+    pbSetSmallFont(@sprites["scene"].contents)
+    @sprites["scene"].resizeToFit2($pkmn_data,255,220)
+    @sprites["scene"].visible = true
+    $pkmn_info = @sprites["scene"]
+    command_list = []
+    commands = []
+    MenuHandlers.each_available(:min_grinding_options, screen, party, party_idx) do |option, hash, name|
+      command_list.push(name)
+      commands.push(hash)
+    end
+    command_list.push(_INTL("Cancel"))
+    choice = screen.scene.pbShowCommands(_INTL("Change what?"), command_list)
+    if choice < 0 || choice >= commands.length
+      @viewport1.dispose
+      next
+    end
+    commands[choice]["effect"].call(screen, party, party_idx)
+  }
+})
+
+MenuHandlers.add(:min_grinding_options, :set_level, {
+  "name"   => _INTL("Set level"),
+  "order"  => 1,
+  "effect" => proc { |screen, party, party_idx|
+    pkmn = party[party_idx]
+    params = ChooseNumberParams.new
+    params.setRange(1, LEVEL_CAP[$game_system.level_cap])
+    params.setDefaultValue(pkmn.level)
+    level = pbMessageChooseNumber(
+      _INTL("Set the Pokémon's level (Level Cap is {1}).", params.maxNumber), params
+    ) { screen.pbUpdate }
+    if level != pkmn.level
+      pkmn.level = level
+      pkmn.calc_stats
+      screen.pbRefreshSingle(party_idx)
+    end
+    $viewport_min.dispose
+    next false
+  }
+})
+
+MenuHandlers.add(:min_grinding_options, :evs_ivs, {
+  "name"   => _INTL("EVs/IVs"),
+  "order"  => 2,
+  "effect" => proc { |screen, party, party_idx|
+    pkmn = party[party_idx]
+    cmd = 0
+    loop do
+      persid = sprintf("0x%08X", pkmn.personalID)
+      cmd = screen.pbShowCommands(_INTL("Change which?"),
+                                  [_INTL("Set EVs"),
+                                   _INTL("Set IVs")], cmd)
+      break if cmd < 0
+      case cmd
+      when 0   # Set EVs
+        cmd2 = 0
+        loop do
+          totalev = 0
+          evcommands = []
+          ev_id = []
+          GameData::Stat.each_main do |s|
+            evcommands.push(s.name + " (#{pkmn.ev[s.id]})")
+            ev_id.push(s.id)
+            totalev += pkmn.ev[s.id]
+          end
+          cmd2 = screen.pbShowCommands(_INTL("Change which EV?\nTotal: {1}/{2} ({3}%)",
+                                             totalev, Pokemon::EV_LIMIT,
+                                             100 * totalev / Pokemon::EV_LIMIT), evcommands, cmd2)
+          break if cmd2 < 0
+          if cmd2 < ev_id.length
+            params = ChooseNumberParams.new
+            upperLimit = 0
+            GameData::Stat.each_main { |s| upperLimit += pkmn.ev[s.id] if s.id != ev_id[cmd2] }
+            upperLimit = Pokemon::EV_LIMIT - upperLimit
+            upperLimit = [upperLimit, Pokemon::EV_STAT_LIMIT].min
+            thisValue = [pkmn.ev[ev_id[cmd2]], upperLimit].min
+            params.setRange(0, upperLimit)
+            params.setDefaultValue(thisValue)
+            params.setCancelValue(thisValue)
+            f = pbMessageChooseNumber(_INTL("Set the EV for {1} (max. {2}).",
+                                            GameData::Stat.get(ev_id[cmd2]).name, upperLimit), params) { screen.pbUpdate }
+            if f != pkmn.ev[ev_id[cmd2]]
+              pkmn.ev[ev_id[cmd2]] = f
+              pkmn.calc_stats
+              screen.pbRefreshSingle(party_idx)
+              $pkmn_info.text = "Nature: #{pkmn.nature.name}\nAbility: #{pkmn.ability.name}\nEVs: #{pkmn.ev[:HP]},#{pkmn.ev[:ATTACK]},#{pkmn.ev[:DEFENSE]},#{pkmn.ev[:SPECIAL_ATTACK]},#{pkmn.ev[:SPECIAL_DEFENSE]},#{pkmn.ev[:SPEED]}\nIVs: #{pkmn.iv[:HP]},#{pkmn.iv[:ATTACK]},#{pkmn.iv[:DEFENSE]},#{pkmn.iv[:SPECIAL_ATTACK]},#{pkmn.iv[:SPECIAL_DEFENSE]},#{pkmn.iv[:SPEED]}"
+              $pkmn_info.resizeToFit2($pkmn_info.text,255,220)
+            end
+          end
+        end
+      when 1   # Set IVs
+        cmd2 = 0
+        loop do
+          hiddenpower = pbHiddenPower(pkmn)
+          totaliv = 0
+          ivcommands = []
+          iv_id = []
+          GameData::Stat.each_main do |s|
+            ivcommands.push(s.name + " (#{pkmn.iv[s.id]})")
+            iv_id.push(s.id)
+            totaliv += pkmn.iv[s.id]
+          end
+          msg = _INTL("Change which IV?\nHidden Power:\n{1}, power {2}\nTotal: {3}/{4} ({5}%)",
+                      GameData::Type.get(hiddenpower[0]).name, hiddenpower[1], totaliv,
+                      iv_id.length * Pokemon::IV_STAT_LIMIT, 100 * totaliv / (iv_id.length * Pokemon::IV_STAT_LIMIT))
+          cmd2 = screen.pbShowCommands(msg, ivcommands, cmd2)
+          break if cmd2 < 0
+          if cmd2 < iv_id.length
+            params = ChooseNumberParams.new
+            params.setRange(0, Pokemon::IV_STAT_LIMIT)
+            params.setDefaultValue(pkmn.iv[iv_id[cmd2]])
+            params.setCancelValue(pkmn.iv[iv_id[cmd2]])
+            f = pbMessageChooseNumber(_INTL("Set the IV for {1} (max. 31).",
+                                            GameData::Stat.get(iv_id[cmd2]).name), params) { screen.pbUpdate }
+            if f != pkmn.iv[iv_id[cmd2]]
+              pkmn.iv[iv_id[cmd2]] = f
+              pkmn.calc_stats
+              screen.pbRefreshSingle(party_idx)
+              $pkmn_info.text = "Nature: #{pkmn.nature.name}\nAbility: #{pkmn.ability.name}\nEVs: #{pkmn.ev[:HP]},#{pkmn.ev[:ATTACK]},#{pkmn.ev[:DEFENSE]},#{pkmn.ev[:SPECIAL_ATTACK]},#{pkmn.ev[:SPECIAL_DEFENSE]},#{pkmn.ev[:SPEED]}\nIVs: #{pkmn.iv[:HP]},#{pkmn.iv[:ATTACK]},#{pkmn.iv[:DEFENSE]},#{pkmn.iv[:SPECIAL_ATTACK]},#{pkmn.iv[:SPECIAL_DEFENSE]},#{pkmn.iv[:SPEED]}"
+              $pkmn_info.resizeToFit2($pkmn_info.text,255,220)
+            end
+          end
+        end
+      end
+    end
+    $viewport_min.dispose
+    next false
+  }
+})
+MenuHandlers.add(:min_grinding_options, :ability, {
+  "name"   => _INTL("Change ability"),
+  "order"  => 3,
+  "effect" => proc { |screen, party, party_idx|
+    pkmn = party[party_idx]
+    loop do
+      if pkmn.ability
+        msg = _INTL("Ability is {1} (index {2}).", pkmn.ability.name, pkmn.ability_index)
+      else
+        msg = _INTL("No ability (index {1}).", pkmn.ability_index)
+      end
+# Set possible ability
+      abils = pkmn.getAbilityList
+      ability_commands = []
+      abil_cmd = 0
+      abils.each do |i|
+        ability_commands.push(((i[1] < 2) ? "" : "(H) ") + GameData::Ability.get(i[0]).name)
+        abil_cmd = ability_commands.length - 1 if pkmn.ability_id == i[0]
+      end
+      abil_cmd = screen.pbShowCommands(_INTL("Choose an ability."), ability_commands, abil_cmd)
+      break if abil_cmd < 0
+      pkmn.ability_index = abils[abil_cmd][1]
+      pkmn.ability = nil
+      screen.pbRefreshSingle(party_idx)
+      $pkmn_info.text = "Nature: #{pkmn.nature.name}\nAbility: #{pkmn.ability.name}\nEVs: #{pkmn.ev[:HP]},#{pkmn.ev[:ATTACK]},#{pkmn.ev[:DEFENSE]},#{pkmn.ev[:SPECIAL_ATTACK]},#{pkmn.ev[:SPECIAL_DEFENSE]},#{pkmn.ev[:SPEED]}\nIVs: #{pkmn.iv[:HP]},#{pkmn.iv[:ATTACK]},#{pkmn.iv[:DEFENSE]},#{pkmn.iv[:SPECIAL_ATTACK]},#{pkmn.iv[:SPECIAL_DEFENSE]},#{pkmn.iv[:SPEED]}"
+      $pkmn_info.resizeToFit2($pkmn_info.text,255,220)
+    end
+    $viewport_min.dispose
+    next false
+  }
+})
+
+MenuHandlers.add(:min_grinding_options, :nature, {
+  "name"   => _INTL("Set nature"),
+  "order"  => 4,
+  "effect" => proc { |screen, party, party_idx|
+    pkmn = party[party_idx]
+    commands = []
+    ids = []
+    GameData::Nature.each do |nature|
+      if nature.stat_changes.length == 0
+        commands.push(_INTL("{1} (---)", nature.real_name))
+      else
+        plus_text = ""
+        minus_text = ""
+        nature.stat_changes.each do |change|
+          if change[1] > 0
+            plus_text += "/" if !plus_text.empty?
+            plus_text += GameData::Stat.get(change[0]).name_brief
+          elsif change[1] < 0
+            minus_text += "/" if !minus_text.empty?
+            minus_text += GameData::Stat.get(change[0]).name_brief
+          end
+        end
+        commands.push(_INTL("{1} (+{2}, -{3})", nature.real_name, plus_text, minus_text))
+      end
+      ids.push(nature.id)
+    end
+    commands.push(_INTL("[Reset]"))
+    cmd = ids.index(pkmn.nature_id || ids[0])
+    loop do
+      msg = _INTL("Nature is {1}.", pkmn.nature.name)
+      cmd = screen.pbShowCommands(msg, commands, cmd)
+      break if cmd < 0
+      if cmd >= 0 && cmd < commands.length - 1   # Set nature
+        pkmn.nature = ids[cmd]
+      elsif cmd == commands.length - 1   # Reset
+        pkmn.nature = nil
+      end
+      screen.pbRefreshSingle(party_idx)
+      $pkmn_info.text = "Nature: #{pkmn.nature.name}\nAbility: #{pkmn.ability.name}\nEVs: #{pkmn.ev[:HP]},#{pkmn.ev[:ATTACK]},#{pkmn.ev[:DEFENSE]},#{pkmn.ev[:SPECIAL_ATTACK]},#{pkmn.ev[:SPECIAL_DEFENSE]},#{pkmn.ev[:SPEED]}\nIVs: #{pkmn.iv[:HP]},#{pkmn.iv[:ATTACK]},#{pkmn.iv[:DEFENSE]},#{pkmn.iv[:SPECIAL_ATTACK]},#{pkmn.iv[:SPECIAL_DEFENSE]},#{pkmn.iv[:SPEED]}"
+      $pkmn_info.resizeToFit2($pkmn_info.text,255,220)
+    end
+    $viewport_min.dispose
+    next false
+  }
+})
+
 MenuHandlers.add(:party_menu, :evolve, {
   "name"      => _INTL("Evolve"),
-  "order"     => 33,
-  "condition" => proc { |screen, party, party_idx| next party.length > 1 },
+  "order"     => 34,
   "effect"    => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
     evoreqs = {}
@@ -568,7 +786,37 @@ MenuHandlers.add(:party_menu, :evolve, {
         evo.pbStartScreen(pkmn,newspecies)
         evo.pbEvolution
         evo.pbEndScreen
-        scene.pbRefresh
+        screen.pbRefresh
       }
   }
 })
+def pbPokemonMart(stock, speech = nil, cantsell = false)
+  stock.delete_if { |item| GameData::Item.get(item).is_important? && $bag.has?(item) }
+  commands = []
+  cmdBuy  = -1
+  cmdSell = -1
+  cmdQuit = -1
+  commands[cmdBuy = commands.length]  = _INTL("I'm here to buy")
+  commands[cmdSell = commands.length] = _INTL("I'm here to sell") if !cantsell
+  commands[cmdQuit = commands.length] = _INTL("No, thanks")
+  pbCallBub(2,@event_id)
+  cmd = pbMessage(speech || _INTL("\\[7fe00000]Welcome! How may I help you?"), commands, cmdQuit + 1)
+  loop do
+    if cmdBuy >= 0 && cmd == cmdBuy
+      scene = PokemonMart_Scene.new
+      screen = PokemonMartScreen.new(scene, stock)
+      screen.pbBuyScreen
+    elsif cmdSell >= 0 && cmd == cmdSell
+      scene = PokemonMart_Scene.new
+      screen = PokemonMartScreen.new(scene, stock)
+      screen.pbSellScreen
+    else
+      pbCallBub(2,@event_id)
+      pbMessage(_INTL("\\[7fe00000]Do come again!"))
+      break
+    end
+    pbCallBub(2,@event_id)
+    cmd = pbMessage(_INTL("\\[7fe00000]Is there anything else I can do for you?"), commands, cmdQuit + 1)
+  end
+  $game_temp.clear_mart_prices
+end

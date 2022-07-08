@@ -24,6 +24,25 @@ Battle::ItemEffects::OnSwitchIn.add(:LEVITATEORB,
   }
 )
 
+Battle::ItemEffects::OnSwitchIn.add(:THICKFATORB,
+  proc { |ability, battler, battle|
+    ability = battler.ability_id
+    battler.ability_id = :THICKFAT
+    if ability != battler.ability_id
+      battle.pbShowAbilitySplash(battler,false,true)
+      battle.pbDisplay(_INTL("{1}'s Thick Fat Orb gives it heat and cold resistance!",battler.name))
+      battle.pbHideAbilitySplash(battler)
+      battler.ability_id = ability
+    end
+  }
+)
+
+Battle::ItemEffects::DamageCalcFromTarget.add(:THICKFATORB,
+  proc { |item, user, target, move, mults, baseDmg, type|
+    mults[:base_damage_multiplier] /= 2 if [:FIRE, :ICE].include?(type)
+  }
+)
+
 Battle::ItemEffects::OnSwitchIn.add(:CACOPHONYORB,
   proc { |ability, battler, battle|
     ability = battler.ability_id
@@ -213,6 +232,16 @@ Battle::ItemEffects::OnSwitchIn.add(:SHADOWGUARDORB,
   }
 )
 
+Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
+  proc { |item, battler, battle|
+    next false if (battle.field.terrain != :Grassy || battle.field.field_effects == :Garden)
+    next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
+    itemName = GameData::Item.get(item).name
+    battle.pbCommonAnimation("UseItem", battler)
+    next battler.pbRaiseStatStageByCause(:DEFENSE, 1, battler, itemName)
+  }
+)
+
 class Battle::Battler
   def ability_orb_held?(check_item)
     return false if !check_item
@@ -309,5 +338,133 @@ class Battle::Battler
     pbItemsOnUnnerveEnding if self.item == :UNNERVEORB
     setInitialItem(nil) if permanent && self.item == self.initialItem
     self.item = nil
+  end
+end
+def pbRaiseEffortValues(pkmn, stat, evGain = 10, ev_limit = true)
+  stat = GameData::Stat.get(stat).id
+  return 0 if ev_limit && pkmn.ev[stat] >= 252
+  evTotal = 0
+  GameData::Stat.each_main { |s| evTotal += pkmn.ev[s.id] }
+  evGain = evGain.clamp(0, Pokemon::EV_STAT_LIMIT - pkmn.ev[stat])
+  evGain = evGain.clamp(0, 252 - pkmn.ev[stat]) if ev_limit
+  evGain = evGain.clamp(0, Pokemon::EV_LIMIT - evTotal)
+  if evGain > 0
+    pkmn.ev[stat] += evGain
+    pkmn.calc_stats
+  end
+  return evGain
+end
+def pbRaiseHappinessAndLowerEV(pkmn,scene,stat,messages)
+  h = pkmn.happiness<255
+  e = pkmn.ev[stat]>0
+  if !h && !e
+    scene.pbDisplay(_INTL("It won't have any effect."))
+    return false
+  end
+  if h
+    pkmn.changeHappiness("evberry")
+  end
+  if e
+    pkmn.ev[stat] = 0
+    pkmn.calc_stats
+  end
+  scene.pbRefresh
+  scene.pbDisplay(messages[2-(h ? 0 : 2)-(e ? 0 : 1)])
+  return true
+end
+ItemHandlers::UseInField.add(:HMCATALOGUE,proc{|item|
+  useHMCatalogue
+})
+
+ItemHandlers::UseFromBag.add(:HMCATALOGUE,proc{|item|
+  next 2
+})
+
+ItemHandlers::UseOnPokemon.add(:REVIVE, proc { |item, qty, pkmn, scene|
+  if !pkmn.fainted? || $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("It won't have any effect."))
+    next false
+  end
+  pkmn.hp = (pkmn.totalhp / 2).floor
+  pkmn.hp = 1 if pkmn.hp <= 0
+  pkmn.heal_status
+  scene.pbRefresh
+  scene.pbDisplay(_INTL("{1}'s HP was restored.", pkmn.name))
+  next true
+})
+
+ItemHandlers::UseOnPokemon.add(:MAXREVIVE, proc { |item, qty, pkmn, scene|
+  if !pkmn.fainted? || $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("It won't have any effect."))
+    next false
+  end
+  pkmn.heal_HP
+  pkmn.heal_status
+  scene.pbRefresh
+  scene.pbDisplay(_INTL("{1}'s HP was restored.", pkmn.name))
+  next true
+})
+
+ItemHandlers::UseOnPokemonMaximum.add(:RARECANDY, proc { |item, pkmn|
+  if $PokemonSystem.level_caps == 1
+    next GameData::GrowthRate.max_level - pkmn.level
+  else
+    next LEVEL_CAP[$game_system.level_cap] - pkmn.level
+  end
+})
+
+ItemHandlers::UseOnPokemon.add(:RARECANDY, proc { |item, qty, pkmn, scene|
+  if pkmn.shadowPokemon?
+    scene.pbDisplay(_INTL("It won't have any effect."))
+    next false
+  end
+  if $PokemonSystem.level_caps == 1
+    if pkmn.level >= GameData::GrowthRate.max_level
+      new_species = pkmn.check_evolution_on_level_up
+      if !Settings::RARE_CANDY_USABLE_AT_MAX_LEVEL || !new_species
+        scene.pbDisplay(_INTL("It won't have any effect."))
+        next false
+      end
+      # Check for evolution
+      pbFadeOutInWithMusic {
+        evo = PokemonEvolutionScene.new
+        evo.pbStartScreen(pkmn, new_species)
+        evo.pbEvolution
+        evo.pbEndScreen
+        scene.pbRefresh if scene.is_a?(PokemonPartyScreen)
+      }
+      next true
+    end
+  else
+    if pkmn.level >= LEVEL_CAP[$game_system.level_cap]
+      new_species = pkmn.check_evolution_on_level_up
+      if !Settings::RARE_CANDY_USABLE_AT_MAX_LEVEL || !new_species
+        scene.pbDisplay(_INTL("It won't have any effect."))
+        next false
+      end
+      # Check for evolution
+      pbFadeOutInWithMusic {
+        evo = PokemonEvolutionScene.new
+        evo.pbStartScreen(pkmn, new_species)
+        evo.pbEvolution
+        evo.pbEndScreen
+        scene.pbRefresh if scene.is_a?(PokemonPartyScreen)
+      }
+      next true
+    end
+  end
+  # Level up
+  pbChangeLevel(pkmn, pkmn.level + qty, scene)
+  scene.pbHardRefresh
+  next true
+})
+
+class Trainer
+  def heal_party
+    if $PokemonSystem.nuzlocke == 0
+      @party.each { |pkmn| pkmn.heal }
+    else
+      @party.each { |pkmn| pkmn.heal if !pkmn.fainted?}
+    end
   end
 end

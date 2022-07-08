@@ -1,5 +1,5 @@
 ﻿Name       = v20.1 Hotfixes
-Version    = 1.0.0
+Version    = 1.0.1
 Essentials = 20.1
 Conflicts  = v19 Hotfixes
 Conflicts  = v19.1 Updates
@@ -20,5 +20,15 @@ Credits    = Maruno
 #   screen.
 # - Fixed playing the credits/changing $scene leaving a ghost image of
 #   the old map behind.
+#
+# 1.0.1:
+#
+# - Fixed crash when the Compiler rewrites a door event.
+# - Fixed the "Withdraw Pokémon" and "Deposit Pokémon" not working,
+#   caused by the previous version of this plugin.
+# - Fixed Rare Candy not reviving a fainted Shedinja.
+# - Fixed fainted Pokémon reviving if they evolve.
+# - Fixed error messages appearing in the console because of some
+#   script switches in the "Switches" debug feature.
 #
 #=====================================================================

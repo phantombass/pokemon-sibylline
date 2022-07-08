@@ -1267,9 +1267,59 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:SANDFORCE,
 
 Battle::AbilityEffects::OnSwitchIn.add(:FLASHFIRE,
   proc { |ability, battler, battle, switch_in|
-    if battle.field.field_effects == :Lava
+    if battle.field.field_effects == :Lava || battle.field.field_effects == :Fire
       battle.pbShowAbilitySplash(battler)
-      battle.pbDisplay(_INTL("The lava boosted the power of {1}'s Fire-type moves!", battler.pbThis(true)))
+      battle.pbDisplay(_INTL("The heat boosted the power of {1}'s Fire-type moves!", battler.pbThis(true)))
+      battle.pbHideAbilitySplash(battler)
+    end
+  }
+)
+Battle::AbilityEffects::OnSwitchIn.add(:GRASSPELT,
+  proc { |ability, battler, battle, switch_in|
+    if battle.field.field_effects == :Garden
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("The garden activated {1}'s Grass Pelt!", battler.pbThis(true)))
+      battler.pbRaiseStatStageByAbility(:DEFENSE, 1, battler)
+      battle.pbHideAbilitySplash(battler)
+    end
+  }
+)
+Battle::AbilityEffects::OnSwitchIn.add(:LEAFGUARD,
+  proc { |ability, battler, battle, switch_in|
+    if battle.field.field_effects == :Garden || battle.field.field_effects == :Swamp
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("{1}'s Leaf Guard was activated by the field!", battler.pbThis(true)))
+      battle.pbHideAbilitySplash(battler)
+    end
+  }
+)
+Battle::AbilityEffects::OnSwitchIn.add(:FLOWERVEIL,
+  proc { |ability, battler, battle, switch_in|
+    if battle.field.field_effects == :Garden
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("{1}'s Flower Veil was activated by the field!", battler.pbThis(true)))
+      battle.pbHideAbilitySplash(battler)
+    end
+  }
+)
+Battle::AbilityEffects::StatusImmunity.add(:FLOWERVEIL,
+  proc { |ability, battler, status|
+    next true if battler.pbHasType?(:GRASS)
+    next true if battler.affectedByGarden?
+  }
+)
+Battle::AbilityEffects::StatusImmunity.add(:LEAFGUARD,
+  proc { |ability, battler, status|
+    next true if [:Sun, :HarshSun].include?(battler.effectiveWeather)
+    next true if [:Swamp,:Garden].include?(battler.effectiveField)
+  }
+)
+Battle::AbilityEffects::OnSwitchIn.add(:SAPSIPPER,
+  proc { |ability, battler, battle, switch_in|
+    if battle.field.field_effects == :Garden
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("The garden activated {1}'s Sap Sipper!", battler.pbThis(true)))
+      battler.pbRaiseStatStageByAbility(:ATTACK, 1, battler)
       battle.pbHideAbilitySplash(battler)
     end
   }

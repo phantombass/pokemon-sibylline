@@ -25,5 +25,14 @@ Land,21
     20,JOLTIK_1,5,7
     20,HOOTHOOT_1,5,7
     15,POLIWAG_1,8
-    5,DUNSPARCE_1,8
+    5,PIKIPEK_1,8
+#-------------------------------
+[080] # Pana City
+Land,21
+    20,BIDOOF_1,6,8
+    20,HOOTHOOT_1,6,8
+    20,BIDOOF_1,7,9
+    20,RUFFLET_1,7,9
+    15,AUDINO,10
+    5,PIKACHU,10
 #-------------------------------

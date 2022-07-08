@@ -382,8 +382,32 @@ class Battle::ActiveField
 end
 
 class Battle
+  def pbCanUseItemOnPokemon?(item, pkmn, battler, scene, showMessages = true)
+    if !pkmn || pkmn.egg?
+      scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+      return false
+    end
+    if $PokemonSystem.difficulty > 1
+      scene.pbDisplay(_INTL("Healing items cannot be used in battle."))
+      return false
+    end
+    # Embargo
+    if battler && battler.effects[PBEffects::Embargo] > 0
+      if showMessages
+        scene.pbDisplay(_INTL("Embargo's effect prevents the item's use on {1}!",
+                              battler.pbThis(true)))
+      end
+      return false
+    end
+    # Hyper Mode and non-Scents
+    if pkmn.hyper_mode && !GameData::Item.get(item)&.is_scent?
+      scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+      return false
+    end
+    return true
+  end
   def pbItemMenu(idxBattler, firstAction)
-    if !@internalBattle || $PokemonSystem.difficulty > 1
+    if !@internalBattle || ($PokemonSystem.difficulty > 1 && @opposes)
       pbDisplay(_INTL("Items can't be used here."))
       return false
     end
@@ -394,11 +418,13 @@ class Battle
       case useType
       when 1, 2   # Use on Pokémon/Pokémon's move
         next false if !ItemHandlers.hasBattleUseOnPokemon(item)
+        next false if $PokemonSystem.difficulty > 1
         battler = pbFindBattler(idxPkmn, idxBattler)
         pkmn    = pbParty(idxBattler)[idxPkmn]
         next false if !pbCanUseItemOnPokemon?(item, pkmn, battler, itemScene)
       when 3   # Use on battler
         next false if !ItemHandlers.hasBattleUseOnBattler(item)
+        next false if $PokemonSystem.difficulty > 1
         battler = pbFindBattler(idxPkmn, idxBattler)
         pkmn    = battler.pokemon if battler
         next false if !pbCanUseItemOnPokemon?(item, pkmn, battler, itemScene)
@@ -407,6 +433,7 @@ class Battle
         battler = @battlers[idxPkmn]
         pkmn    = battler.pokemon if battler
       when 5   # No target (Poké Doll, Guard Spec., Launcher items)
+        next false if $PokemonSystem.difficulty > 1
         battler = @battlers[idxBattler]
         pkmn    = battler.pokemon if battler
       else

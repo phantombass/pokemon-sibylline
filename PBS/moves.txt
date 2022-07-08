@@ -4942,7 +4942,7 @@ Description = The target is slammed with a long tail, vines, etc., to inflict da
 #-------------------------------
 [STRENGTH]
 Name = Strength
-Type = NORMAL
+Type = ROCK
 Category = Physical
 Power = 80
 Accuracy = 100
@@ -5411,7 +5411,7 @@ Description = As long as this move is in use, the user's Attack rises each time 
 #-------------------------------
 [SPIKECANNON]
 Name = Spike Cannon
-Type = NORMAL
+Type = STEEL
 Category = Physical
 Power = 20
 Accuracy = 100
@@ -8432,7 +8432,7 @@ Accuracy = 100
 TotalPP = 10
 Target = NearOther
 FunctionCode = DoublePowerIfTargetNotActed
-Flags = Contact,CanProtect,CanMirrorMove
+Flags = Contact,CanProtect,CanMirrorMove,Biting
 Description = The user rends the target with its hard gills. Power doubles if the user moves first.
 #-------------------------------
 [LIQUIDATION]
@@ -8821,4 +8821,41 @@ Target = AllNearFoes
 FunctionCode = SuperEffectiveAgainstElectric
 Flags = CanProtect,CanMirrorMove,Sound
 Description = The user scrapes metal that disturbs polarity. Super-effective on Electric-types.
+#-------------------------------
+[PIXIEPUNCH]
+Name = Tackle
+Type = FAIRY
+Category = Physical
+Power = 40
+Accuracy = 100
+TotalPP = 35
+Target = NearOther
+FunctionCode = None
+Flags = Contact,CanProtect,CanMirrorMove,Punching
+Description = A physical attack in which the user charges and slams into the target with its whole body.
+#-------------------------------
+[RUBBLERAZE]
+Name = Rubble Raze
+Type = ROCK
+Category = Physical
+Power = 120
+Accuracy = 100
+TotalPP = 10
+Target = RandomNearFoe
+FunctionCode = MultiTurnAttackConfuseUserAtEnd
+Flags = Contact,CanProtect,CanMirrorMove
+Description = The user rampages and attacks for two to three turns. It then becomes confused, however.
+#-------------------------------
+[SOLARWINGS]
+Name = Solar Wings
+Type = FIRE
+Category = Special
+Power = 85
+Accuracy = 100
+TotalPP = 15
+Target = NearOther
+FunctionCode = BurnTarget
+Flags = Contact,CanProtect,CanMirrorMove,ThawsUser
+EffectChance = 10
+Description = The user cloaks its wings in fire and launches the flames at the target that can also burn.
 #-------------------------------

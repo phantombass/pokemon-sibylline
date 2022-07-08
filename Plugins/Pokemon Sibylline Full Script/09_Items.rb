@@ -24,6 +24,25 @@ Battle::ItemEffects::OnSwitchIn.add(:LEVITATEORB,
   }
 )
 
+Battle::ItemEffects::OnSwitchIn.add(:THICKFATORB,
+  proc { |ability, battler, battle|
+    ability = battler.ability_id
+    battler.ability_id = :THICKFAT
+    if ability != battler.ability_id
+      battle.pbShowAbilitySplash(battler,false,true)
+      battle.pbDisplay(_INTL("{1}'s Thick Fat Orb gives it heat and cold resistance!",battler.name))
+      battle.pbHideAbilitySplash(battler)
+      battler.ability_id = ability
+    end
+  }
+)
+
+Battle::ItemEffects::DamageCalcFromTarget.add(:THICKFATORB,
+  proc { |item, user, target, move, mults, baseDmg, type|
+    mults[:base_damage_multiplier] /= 2 if [:FIRE, :ICE].include?(type)
+  }
+)
+
 Battle::ItemEffects::OnSwitchIn.add(:CACOPHONYORB,
   proc { |ability, battler, battle|
     ability = battler.ability_id
@@ -210,6 +229,16 @@ Battle::ItemEffects::OnSwitchIn.add(:SHADOWGUARDORB,
       battle.pbHideAbilitySplash(battler)
       battler.ability_id = ability
     end
+  }
+)
+
+Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
+  proc { |item, battler, battle|
+    next false if (battle.field.terrain != :Grassy || battle.field.field_effects == :Garden)
+    next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
+    itemName = GameData::Item.get(item).name
+    battle.pbCommonAnimation("UseItem", battler)
+    next battler.pbRaiseStatStageByCause(:DEFENSE, 1, battler, itemName)
   }
 )
 

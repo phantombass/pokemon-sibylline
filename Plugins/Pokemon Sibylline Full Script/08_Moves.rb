@@ -378,6 +378,9 @@ class Battle::Move
         multipliers[:final_damage_multiplier] /= 2
       end
     when :Garden
+      if target.pbHasType?(:BUG)
+        multipliers[:defense_multiplier] *= 1.5
+      end
       case type
       when :FAIRY, :BUG, :GRASS
         multipliers[:final_damage_multiplier] *= 1.2
@@ -1369,5 +1372,81 @@ class Battle::Move::SuperEffectiveAgainstElectric < Battle::Move
   def pbCalcTypeModSingle(moveType,defType,user,target)
     return Effectiveness::SUPER_EFFECTIVE_ONE if defType == :ELECTRIC
     return super
+  end
+end
+
+#Grassy Glide to boost priority in Garden field
+class Battle::Move::HigherPriorityInGrassyTerrain < Battle::Move
+  def pbPriority(user)
+    ret = super
+    ret += 1 if @battle.field.terrain == :Grassy && user.affectedByTerrain?
+    ret += 1 if @battle.field.field_effects == :Garden && user.affectedByGarden?
+    return ret
+  end
+end
+
+class Battle::Move::UseMoveDependingOnEnvironment < Battle::Move
+  def callsAnotherMove?; return true; end
+
+  def pbOnStartUse(user, targets)
+    # NOTE: It's possible in theory to not have the move Nature Power wants to
+    #       turn into, but what self-respecting game wouldn't at least have Tri
+    #       Attack in it?
+    @npMove = :TRIATTACK
+    case @battle.field.terrain
+    when :Electric
+      @npMove = :THUNDERBOLT if GameData::Move.exists?(:THUNDERBOLT)
+    when :Grassy
+      @npMove = :ENERGYBALL if GameData::Move.exists?(:ENERGYBALL)
+    when :Misty
+      @npMove = :MOONBLAST if GameData::Move.exists?(:MOONBLAST)
+    when :Psychic
+      @npMove = :PSYCHIC if GameData::Move.exists?(:PSYCHIC)
+    else
+      case @battle.field.field_effects
+      when :Garden
+        @npMove = :PETALDANCE if GameData::Move.exists?(:PETALDANCE)
+      when :City
+        @npMove = :OVERDRIVE if GameData::Move.exists?(:OVERDRIVE)
+      when :Ruins
+        @npMove = :ANCIENTPOWER if GameData::Move.exists?(:ANCIENTPOWER)
+      else
+        try_move = nil
+        case @battle.environment
+        when :Grass, :TallGrass, :Forest, :ForestGrass
+          try_move = (Settings::MECHANICS_GENERATION >= 6) ? :ENERGYBALL : :SEEDBOMB
+        when :MovingWater, :StillWater, :Underwater
+          try_move = :HYDROPUMP
+        when :Puddle
+          try_move = :MUDBOMB
+        when :Cave
+          try_move = (Settings::MECHANICS_GENERATION >= 6) ? :POWERGEM : :ROCKSLIDE
+        when :Rock, :Sand
+          try_move = (Settings::MECHANICS_GENERATION >= 6) ? :EARTHPOWER : :EARTHQUAKE
+        when :Snow
+          try_move = :BLIZZARD
+          try_move = :FROSTBREATH if Settings::MECHANICS_GENERATION == 6
+          try_move = :ICEBEAM if Settings::MECHANICS_GENERATION >= 7
+        when :Ice
+          try_move = :ICEBEAM
+        when :Volcano
+          try_move = :LAVAPLUME
+        when :Graveyard
+          try_move = :SHADOWBALL
+        when :Sky
+          try_move = :AIRSLASH
+        when :Space
+          try_move = :DRACOMETEOR
+        when :UltraSpace
+          try_move = :PSYSHOCK
+        end
+        @npMove = try_move if GameData::Move.exists?(try_move)
+      end
+    end
+  end
+
+  def pbEffectAgainstTarget(user, target)
+    @battle.pbDisplay(_INTL("{1} turned into {2}!", @name, GameData::Move.get(@npMove).name))
+    user.pbUseMoveSimple(@npMove, target.index)
   end
 end

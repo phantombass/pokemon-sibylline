@@ -764,7 +764,7 @@ MenuHandlers.add(:party_menu, :evolve, {
       end
       case evoreqs.length
       when 0
-        pbDisplay(_INTL("This Pokémon can't evolve."))
+        screen.pbDisplay(_INTL("This Pokémon can't evolve."))
         next
       when 1
         newspecies = evoreqs.keys[0]

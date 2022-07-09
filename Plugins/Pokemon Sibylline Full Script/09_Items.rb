@@ -258,7 +258,8 @@ class Battle::Battler
       :LEVITATEORB,
       :CACOPHONYORB,
       :MAGICBOUNCEORB,
-      :AMPLIFIERORB
+      :AMPLIFIERORB,
+      :THICKFATORB
     ]
     return item_list.include?(item.id)
   end

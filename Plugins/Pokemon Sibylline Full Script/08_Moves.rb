@@ -41,6 +41,10 @@ class Battle::Move
   end
   def pbCalcType(user)
     @powerBoost = false
+    $orig_grass = false
+    $orig_water = false
+    $orig_flying = false
+    $orig_type_ice = false
     ret = pbBaseType(user)
     if ret && GameData::Type.exists?(:ELECTRIC)
       if @battle.field.effects[PBEffects::IonDeluge] && ret == :NORMAL
@@ -59,21 +63,21 @@ class Battle::Move
         $orig_type_ice = true
         @powerBoost = false
       end
+    end
+    if ret && GameData::Type.exists?(:POISON)
       if @battle.field.field_effects == :ToxicFumes && ret == :WATER
         ret = :POISON
         $orig_water = true
         @powerBoost = false
       end
     end
-    if ret && GameData::Type.exists?(:GRASS)
+    if ret && GameData::Type.exists?(:FIRE)
       if @battle.field.field_effects == :Fire && ret == :GRASS
         ret = :FIRE
         $orig_flying = false
         $orig_grass = true
         @powerBoost = false
       end
-    end
-    if ret && GameData::Type.exists?(:FLYING)
       if @battle.field.field_effects == :Fire && ret == :FLYING && specialMove?
         ret = :FIRE
         $orig_grass = false
@@ -369,10 +373,10 @@ class Battle::Move
         @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
       when :DRAGON
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The city strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
       when :GHOST
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The city strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
       end
       if target.pbHasType?(:GHOST) && target.hp == target.totalhp
         multipliers[:final_damage_multiplier] /= 2
@@ -387,8 +391,10 @@ class Battle::Move
         @battle.pbDisplay(_INTL("The garden strengthened the attack!"))
       when :FIRE
         if user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
-          @battle.pbDisplay(_INTL("The city caught fire!"))
+          @battle.pbDisplay(_INTL("The garden caught fire!"))
           $field_effect_bg = "fire"
+          $orig_grass = false
+          $orig_flying = false
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :Fire
           @battle.pbDisplay(_INTL("The field is ablaze."))

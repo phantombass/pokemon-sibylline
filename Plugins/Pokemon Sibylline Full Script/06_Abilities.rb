@@ -6,6 +6,27 @@ module Battle::AbilityEffects
 end
 
 class Battle::Battler
+  def immune_by_ability?(type,ability)
+    if type == :ROCK && ability == :SCALER
+      return true
+    end
+    if type == :FIRE && ability == :FLASHFIRE
+      return true
+    end
+    if type == :GRASS && ability == :SAPSIPPER
+      return true
+    end
+    if type == :WATER && [:STORMDRAIN,:WATERABSORB,:DRYSKIN,:IRRIGATION].include?(ability)
+      return true
+    end
+    if type == :GROUND && ability == :LEVITATE
+      return true
+    end
+    if type == :ICE && ability == :DEFROST
+      return true
+    end
+    return false
+  end
   def pbInitEffects(batonPass)
     if batonPass
       # These effects are passed on if Baton Pass is used, but they need to be
@@ -358,8 +379,8 @@ class Battle::Battler
     if abilityActive? && Battle::AbilityEffects.triggerStatusImmunity(self.ability, self, :SLEEP)
       return false
     end
-    allBattlers.each do |pkmn|
-      if b.hasActiveItem?(:CACOPHONYORB) && !b.hasActiveAbility?(:SOUNDPROOF)
+    @battle.allBattlers.each do |pkmn|
+      if pkmn.hasActiveItem?(:CACOPHONYORB) && !pkmn.hasActiveAbility?(:SOUNDPROOF)
         @battle.pbDisplay(_INTL("But the Cacophony kept it awake!"))
         return false
       end
@@ -676,7 +697,7 @@ class Battle::Battler
     # Truant
     if hasActiveAbility?(:TRUANT)
       @effects[PBEffects::Truant] = !@effects[PBEffects::Truant]
-      if !@effects[PBEffects::Truant]   # True means loafing, but was just inverted
+      if !@effects[PBEffects::Truant] && !move.statusMove?   # True means loafing, but was just inverted
         @battle.pbShowAbilitySplash(self)
         @battle.pbDisplay(_INTL("{1} is loafing around!",pbThis))
         @lastMoveFailed = true
@@ -1517,5 +1538,43 @@ Battle::AbilityEffects::OnSwitchIn.add(:GROWTHINSTINCT,
     end
     stat = (oAtk > oSpA) ? :DEFENSE : :SPECIAL_DEFENSE
     battler.pbRaiseStatStageByAbility(stat, 1, battler)
+  }
+)
+
+Battle::AbilityEffects::StatusImmunity.add(:FAIRYBUBBLE,
+  proc { |ability, battler, status|
+    next true if status != :NONE
+  }
+)
+
+Battle::AbilityEffects::StatusCure.add(:FAIRYBUBBLE,
+  proc { |ability, battler|
+    next if battler.status == :NONE
+    battler.battle.pbShowAbilitySplash(battler)
+    battler.pbCureStatus(Battle::Scene::USE_ABILITY_SPLASH)
+    if !Battle::Scene::USE_ABILITY_SPLASH
+      battler.battle.pbDisplay(_INTL("{1}'s {2} healed its burn!", battler.pbThis, battler.abilityName))
+    end
+    battler.battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromUser.add(:FAIRYBUBBLE,
+  proc { |ability, user, target, move, mults, baseDmg, type|
+    mults[:attack_multiplier] *= 2 if type == :FAIRY
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromTarget.add(:FAIRYBUBBLE,
+  proc { |ability, user, target, move, mults, baseDmg, type|
+    mults[:final_damage_multiplier] /= 2 if type == :POISON
+  }
+)
+
+Battle::AbilityEffects::OnSwitchOut.add(:FAIRYBUBBLE,
+  proc { |ability, battler, endOfBattle|
+    next if battler.status == :NONE
+    PBDebug.log("[Ability triggered] #{battler.pbThis}'s #{battler.abilityName}")
+    battler.status = :NONE
   }
 )

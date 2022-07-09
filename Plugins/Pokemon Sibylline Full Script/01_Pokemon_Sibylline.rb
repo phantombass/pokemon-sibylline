@@ -67,7 +67,7 @@ class Game_System
   end
 end
 
-LEVEL_CAP = [8,12,15]
+LEVEL_CAP = [8,12,14,17]
 
 module Game
   def self.level_cap_update

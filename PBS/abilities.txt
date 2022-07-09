@@ -1122,3 +1122,7 @@ Description = Boosts Special Attack, but allows only one move to be used.
 [COMPOSURE]
 Name = Composure
 Description = Doubles Special Attack.
+#-------------------------------
+[FAIRYBUBBLE]
+Name = Fairy Bubble
+Description = Boosts Fairy moves, weakens Poison, and prevents status.

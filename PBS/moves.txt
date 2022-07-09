@@ -8823,10 +8823,10 @@ Flags = CanProtect,CanMirrorMove,Sound
 Description = The user scrapes metal that disturbs polarity. Super-effective on Electric-types.
 #-------------------------------
 [PIXIEPUNCH]
-Name = Tackle
+Name = Pixie Punch
 Type = FAIRY
 Category = Physical
-Power = 40
+Power = 60
 Accuracy = 100
 TotalPP = 35
 Target = NearOther
@@ -8858,4 +8858,16 @@ FunctionCode = BurnTarget
 Flags = Contact,CanProtect,CanMirrorMove,ThawsUser
 EffectChance = 10
 Description = The user cloaks its wings in fire and launches the flames at the target that can also burn.
+#-------------------------------
+[WINDDRILL]
+Name = Wind Drill
+Type = FLYING
+Category = Special
+Power = 90
+Accuracy = 95
+TotalPP = 15
+Target = NearOther
+FunctionCode = RemoveScreens
+Flags = Contact,CanProtect,CanMirrorMove
+Description = The user attacks with sharp gust of wind. It can also break any barrier such as Light Screen and Reflect.
 #-------------------------------

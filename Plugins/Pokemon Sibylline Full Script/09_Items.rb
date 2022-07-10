@@ -406,7 +406,43 @@ ItemHandlers::UseOnPokemon.add(:MAXREVIVE, proc { |item, qty, pkmn, scene|
   next true
 })
 
+ItemHandlers::UseOnPokemonMaximum.add(:HPUP, proc { |item, pkmn|
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+    next false
+  end
+  next pbMaxUsesOfEVRaisingItem(:HP, 10, pkmn, Settings::NO_VITAMIN_EV_CAP)
+})
+
+ItemHandlers::UseOnPokemon.add(:HPUP, proc { |item, qty, pkmn, scene|
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+    next false
+  end
+  next pbUseEVRaisingItem(:HP, 10, qty, pkmn, "vitamin", scene, Settings::NO_VITAMIN_EV_CAP)
+})
+
+ItemHandlers::UseOnPokemon.add(:HEALTHFEATHER, proc { |item, qty, pkmn, scene|
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+    next false
+  end
+  next pbUseEVRaisingItem(:HP, 1, qty, pkmn, "wing", scene, true)
+})
+
+ItemHandlers::UseOnPokemonMaximum.add(:HEALTHFEATHER, proc { |item, pkmn|
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+    next false
+  end
+  next pbMaxUsesOfEVRaisingItem(:HP, 1, pkmn, true)
+})
+
 ItemHandlers::UseOnPokemonMaximum.add(:RARECANDY, proc { |item, pkmn|
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+    next false
+  end
   if $PokemonSystem.level_caps == 1
     next GameData::GrowthRate.max_level - pkmn.level
   else
@@ -417,6 +453,10 @@ ItemHandlers::UseOnPokemonMaximum.add(:RARECANDY, proc { |item, pkmn|
 ItemHandlers::UseOnPokemon.add(:RARECANDY, proc { |item, qty, pkmn, scene|
   if pkmn.shadowPokemon?
     scene.pbDisplay(_INTL("It won't have any effect."))
+    next false
+  end
+  if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+    scene.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
     next false
   end
   if $PokemonSystem.level_caps == 1

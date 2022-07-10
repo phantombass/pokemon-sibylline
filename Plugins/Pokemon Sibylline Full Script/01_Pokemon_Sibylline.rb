@@ -55,6 +55,17 @@ MenuHandlers.add(:options_menu, :difficulty, {
   "set_proc"    => proc { |value, _sceme| $PokemonSystem.difficulty = value }
 })
 
+MenuHandlers.add(:options_menu, :min_grinding, {
+  "name"        => _INTL("Minimal Grinding"),
+  "order"       => 96,
+  "type"        => EnumOption,
+  "parameters"  => [_INTL("Off"), _INTL("On")],
+  "description" => _INTL("Choose whether you want Minimal Grinding Mode."),
+  "condition"   => proc { next $PokemonSystem.difficulty > 1 },
+  "get_proc"    => proc { next $PokemonSystem.min_grinding},
+  "set_proc"    => proc { |value, _sceme| $PokemonSystem.min_grinding = value }
+})
+
 class Game_System
   attr_accessor :level_cap
   alias initialize_cap initialize

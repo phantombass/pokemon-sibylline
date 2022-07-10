@@ -6142,7 +6142,7 @@ Pocket = 8
 Price = 0
 FieldUse = Direct
 Flags = KeyItem
-Description = ,"A catalog of devices that allows Trainers to use HMs in the field
+Description = A catalog of devices that allows Trainers to use HMs in the field.
 #-------------------------------
 [THICKFATORB]
 Name = Thick Fat Orb

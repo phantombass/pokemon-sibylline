@@ -564,6 +564,11 @@ MenuHandlers.add(:min_grinding_options, :set_level, {
     params = ChooseNumberParams.new
     params.setRange(1, LEVEL_CAP[$game_system.level_cap])
     params.setDefaultValue(pkmn.level)
+    if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+      screen.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+      $viewport_min.dispose
+      next false
+    end
     level = pbMessageChooseNumber(
       _INTL("Set the Pokémon's level (Level Cap is {1}).", params.maxNumber), params
     ) { screen.pbUpdate }
@@ -582,6 +587,11 @@ MenuHandlers.add(:min_grinding_options, :evs_ivs, {
   "order"  => 2,
   "effect" => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
+    if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+      screen.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+      $viewport_min.dispose
+      next false
+    end
     cmd = 0
     loop do
       persid = sprintf("0x%08X", pkmn.personalID)
@@ -748,6 +758,11 @@ MenuHandlers.add(:party_menu, :evolve, {
   "order"     => 34,
   "effect"    => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
+    if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
+      screen.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
+      $viewport_min.dispose
+      next false
+    end
     evoreqs = {}
       GameData::Species.get_species_form(pkmn.species,pkmn.form).get_evolutions(true).each do |evo|   # [new_species, method, parameter, boolean]
         if evo[1].to_s.start_with?('Item')

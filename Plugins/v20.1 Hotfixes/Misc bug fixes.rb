@@ -6,54 +6,7 @@
 # https://github.com/Maruno17/pokemon-essentials
 #===============================================================================
 
-Essentials::ERROR_TEXT += "[v20.1 Hotfixes 1.0.1]\r\n"
-
-#===============================================================================
-# Fixed Heavy Ball's catch rate calculation being inaccurate.
-#===============================================================================
-Battle::PokeBallEffects::ModifyCatchRate.add(:HEAVYBALL, proc { |ball, catchRate, battle, battler|
-  next 0 if catchRate == 0
-  weight = battler.pbWeight
-  if Settings::NEW_POKE_BALL_CATCH_RATES
-    if weight >= 3000
-      catchRate += 30
-    elsif weight >= 2000
-      catchRate += 20
-    elsif weight < 1000
-      catchRate -= 20
-    end
-  else
-    if weight >= 4096
-      catchRate += 40
-    elsif weight >= 3072
-      catchRate += 30
-    elsif weight >= 2048
-      catchRate += 20
-    else
-      catchRate -= 20
-    end
-  end
-  next catchRate.clamp(1, 255)
-})
-
-#===============================================================================
-# Added Obstruct to the blacklists of Assist and Copycat.
-#===============================================================================
-class Battle::Move::UseRandomMoveFromUserParty < Battle::Move
-  alias __hotfixes__initialize initialize
-  def initialize(battle, move)
-    __hotfixes__initialize(battle, move)
-    @moveBlacklist.push("ProtectUserFromDamagingMovesObstruct")
-  end
-end
-
-class Battle::Move::UseLastMoveUsed < Battle::Move
-  alias __hotfixes__initialize initialize
-  def initialize(battle, move)
-    __hotfixes__initialize(battle, move)
-    @moveBlacklist.push("ProtectUserFromDamagingMovesObstruct")
-  end
-end
+Essentials::ERROR_TEXT += "[v20.1 Hotfixes 1.0.2]\r\n"
 
 #===============================================================================
 # Fixed the "See ya!" option in the PC menu not working properly.
@@ -327,5 +280,68 @@ class PokemonEvolutionScene
     moves_to_learn.each do |move|
       pbLearnMove(@pokemon, move, true) { pbUpdate }
     end
+  end
+end
+
+#===============================================================================
+# Fixed some special battle intro animations not playing when they should.
+#===============================================================================
+SpecialBattleIntroAnimations.get("vs_trainer_animation")[2] = proc { |battle_type, foe, location|   # Condition
+  next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
+  tr_type = foe[0].trainer_type
+  next pbResolveBitmap("Graphics/Transitions/hgss_vs_#{tr_type}") &&
+       pbResolveBitmap("Graphics/Transitions/hgss_vsBar_#{tr_type}")
+}
+
+SpecialBattleIntroAnimations.get("vs_elite_four_animation")[2] = proc { |battle_type, foe, location|   # Condition
+    next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
+    tr_type = foe[0].trainer_type
+    next pbResolveBitmap("Graphics/Transitions/vsE4_#{tr_type}") &&
+         pbResolveBitmap("Graphics/Transitions/vsE4Bar_#{tr_type}")
+  }
+
+SpecialBattleIntroAnimations.get("alternate_vs_trainer_animation")[2] = proc { |battle_type, foe, location|   # Condition
+    next false if battle_type.even? || foe.length != 1   # Trainer battle against 1 trainer
+    tr_type = foe[0].trainer_type
+    next pbResolveBitmap("Graphics/Transitions/vsTrainer_#{tr_type}") &&
+         pbResolveBitmap("Graphics/Transitions/vsBar_#{tr_type}")
+  }
+
+#===============================================================================
+# Fixed SystemStackError when two events on connected maps have their backs to
+# the other map.
+#===============================================================================
+class Game_Character
+  def calculate_bush_depth
+    if @tile_id > 0 || @always_on_top || jumping?
+      @bush_depth = 0
+      return
+    end
+    this_map = (self.map.valid?(@x, @y)) ? [self.map, @x, @y] : $map_factory&.getNewMap(@x, @y, self.map.map_id)
+    if this_map && this_map[0].deepBush?(this_map[1], this_map[2])
+      xbehind = @x + (@direction == 4 ? 1 : @direction == 6 ? -1 : 0)
+      ybehind = @y + (@direction == 8 ? 1 : @direction == 2 ? -1 : 0)
+      if moving?
+        behind_map = (self.map.valid?(xbehind, ybehind)) ? [self.map, xbehind, ybehind] : $map_factory&.getNewMap(xbehind, ybehind, self.map.map_id)
+        @bush_depth = Game_Map::TILE_HEIGHT if behind_map[0].deepBush?(behind_map[1], behind_map[2])
+      else
+        @bush_depth = Game_Map::TILE_HEIGHT
+      end
+    elsif this_map && this_map[0].bush?(this_map[1], this_map[2]) && !moving?
+      @bush_depth = 12
+    else
+      @bush_depth = 0
+    end
+  end
+end
+
+#===============================================================================
+# Fixed error when getting terrain tag when the player moves between connected
+# maps.
+#===============================================================================
+class Game_Player < Game_Character
+  def pbTerrainTag(countBridge = false)
+    return $map_factory.getTerrainTagFromCoords(self.map.map_id, @x, @y, countBridge) if $map_factory
+    return $game_map.terrain_tag(@x, @y, countBridge)
   end
 end

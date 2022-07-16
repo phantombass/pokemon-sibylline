@@ -1188,13 +1188,13 @@ end
 
 class Battle::Move::HealUserHalfOfTotalHPLoseFlyingTypeThisTurn < Battle::Move::HealingMove
   def pbHealAmount(user)
-    if user.effectiveField == :Lava && !user.pbHasType?(:FIRE) && !user.pbHasType?(:DRAGON) && !user.pbHasType?(:WATER) && !user.pbHasType?(:GROUND) && user.effects[PBEffects::Singed] == 0
+    if user.effectiveField == :Lava && !user.pbHasType?(:FIRE) && !user.pbHasType?(:DRAGON) && !user.pbHasType?(:WATER) && !user.pbHasType?(:GROUND) && user.effects[PBEffects::Singed] == false
       @battle.pbDisplay(_INTL("{1} roosted in the lava and singed their wings!",user.name))
       user.effects[PBEffects::Singed] = 1
       user.pbBurn
       return pbMoveFailed?(user,nil)
     else
-      if user.effects[PBEffects::Singed] == 0
+      if user.effects[PBEffects::Singed] == false
         return (user.totalhp / 2.0).round
       end
     end

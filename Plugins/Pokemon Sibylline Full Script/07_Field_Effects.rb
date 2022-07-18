@@ -169,6 +169,7 @@ class Game_Temp
     when "base"                   then rules["base"]                = var
     when "outcome", "outcomevar"  then rules["outcomeVar"]          = var
     when "nopartner"              then rules["noPartner"]           = true
+    when "inversebattle"          then rules["inverseBattle"] = true
     else
       raise _INTL("Battle rule \"{1}\" does not exist.", rule)
     end
@@ -218,6 +219,34 @@ class Game_Temp
     end
   end
 end
+
+#-------------------------------------------------------------------------------
+# Set type for 'inverse'
+#-------------------------------------------------------------------------------
+module GameData
+	class Type
+		alias inverse_effect effectiveness
+		def effectiveness(other_type)
+			return Effectiveness::NORMAL_EFFECTIVE_ONE if !other_type
+			ret = inverse_effect(other_type)
+			if $inverse
+				case ret
+				when 0, 1; ret = 4
+				when 4;    ret = 1
+				end
+			end
+			return ret
+		end
+	end
+end
+$inverse = false
+# Set rule 'inverse'
+EventHandlers.add(:on_start_battle, :inverse_battle,
+  proc { |_sender| $inverse = true if $game_temp.battle_rules["inverseBattle"] }
+)
+EventHandlers.add(:on_end_battle, :inverse_battle_end,
+  proc { |_sender,e| $inverse = false }
+)
 
 def setBattleRule(*args)
   r = nil

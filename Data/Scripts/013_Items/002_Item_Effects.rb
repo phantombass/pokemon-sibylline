@@ -137,7 +137,7 @@ ItemHandlers::UseInField.add(:MAXREPEL, proc { |item|
 EventHandlers.add(:on_player_step_taken, :repel_counter,
   proc {
     next if $PokemonGlobal.repel <= 0 || $game_player.terrain_tag.ice   # Shouldn't count down if on ice
-    $PokemonGlobal.repel -= 1
+    $PokemonGlobal.repel -= 1 if $inf_repel == 0
     next if $PokemonGlobal.repel > 0
     repels = []
     GameData::Item.each { |itm| repels.push(itm.id) if itm.has_flag?("Repel") }

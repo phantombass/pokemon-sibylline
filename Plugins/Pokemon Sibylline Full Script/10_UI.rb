@@ -486,7 +486,8 @@ end
 
 class Pokemon
   def getEggMovesList
-    egg = GameData::Species.get_species_form(species,@form).egg_moves
+    baby = GameData::Species.get(species).get_baby_species
+    egg = GameData::Species.get_species_form(baby,@form).egg_moves
     return egg
   end
   def has_egg_move?

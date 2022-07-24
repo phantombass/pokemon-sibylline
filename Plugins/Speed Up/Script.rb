@@ -12,7 +12,7 @@ $inf_repel = 0
       $GameSpeed += 1
       $GameSpeed = 0 if $GameSpeed >= SPEEDUP_STAGES.size
     end
-    if trigger?(Input::AUX2) && $game_temp.in_menu == false && $game_temp.message_window_showing == false
+    if trigger?(Input::AUX2) && $game_temp.in_menu == false && $game_temp.message_window_showing == false && $repel_toggle
       $inf_repel += 1
       $game_variables[202] = $inf_repel
       $inf_repel = 0 if $inf_repel >= REPEL_STAGES.size
@@ -26,6 +26,7 @@ SPEEDUP_STAGES = [1,4]
 $GameSpeed = 0
 $frame = 0
 $CanToggle = true
+$repel_toggle = true
 
 module Graphics
   class << Graphics

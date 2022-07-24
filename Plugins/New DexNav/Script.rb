@@ -588,10 +588,17 @@ end
 
 EventHandlers.add(:on_start_battle, :dexnav_display,
   proc {
+    $repel_toggle = false
     if $game_switches[NavNums::Dispose] == true
       $viewport1.dispose
       $game_switches[NavNums::Dispose] = false
     end
+  }
+)
+
+EventHandlers.add(:on_end_battle, :repel_unlock,
+  proc {
+    $repel_toggle = true
   }
 )
 

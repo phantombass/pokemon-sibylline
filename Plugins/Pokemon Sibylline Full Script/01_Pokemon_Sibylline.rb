@@ -1,7 +1,7 @@
 #New Level Cap System
 module Settings
   #UPDATE THIS WITH EVERY PUSH!!!!!!!!!!!!!!
-  GAME_VERSION = "0.2.5"
+  GAME_VERSION = "0.3.1"
   #==================================#
 
   LEVEL_CAP_SWITCH = true
@@ -266,6 +266,7 @@ end
 class PokemonPauseMenu_Scene
   def pbStartScene
     if $game_switches[NavNums::Dispose] == false
+      $RepelToggle = false
       @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
       @viewport.z = 99999
       @sprites = {}
@@ -289,6 +290,7 @@ class PokemonPauseMenu_Scene
       $close_dexnav = 1
       $game_switches[NavNums::Dispose] = false
       pbSEPlay("GUI menu close")
+      $RepelToggle = true
       return
     end
   end

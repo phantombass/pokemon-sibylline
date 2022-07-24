@@ -807,6 +807,7 @@ MenuHandlers.add(:party_menu, :evolve, {
   }
 })
 def pbPokemonMart(stock, speech = nil, cantsell = false)
+  $RepelToggle = false
   stock.delete_if { |item| GameData::Item.get(item).is_important? && $bag.has?(item) }
   commands = []
   cmdBuy  = -1
@@ -829,6 +830,7 @@ def pbPokemonMart(stock, speech = nil, cantsell = false)
     else
       pbCallBub(2,@event_id)
       pbMessage(_INTL("\\[7fe00000]Do come again!"))
+      $RepelToggle = true
       break
     end
     pbCallBub(2,@event_id)

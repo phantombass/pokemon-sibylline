@@ -22,10 +22,12 @@ def generate_random_egg
     egg.steps_to_hatch = 100
     egg.calc_stats
     pbSetSelfSwitch(@event_id,"A",true)
+    $RepelToggle = true
   else
     pbCallBub(2,@event_id)
     pbMessage(_INTL("\\[7fe00000]Oh, you can't carry it with you."))
     pbCallBub(2,@event_id)
     pbMessage(_INTL("\\[7fe00000]Make some space in your party and come back."))
+    $RepelToggle = true
   end
 end

@@ -12,7 +12,7 @@ $inf_repel = 0
       $GameSpeed += 1
       $GameSpeed = 0 if $GameSpeed >= SPEEDUP_STAGES.size
     end
-    if trigger?(Input::AUX2)
+    if trigger?(Input::AUX2) && $game_temp.in_menu == false && $game_temp.message_window_showing == false
       $inf_repel += 1
       $inf_repel = 0 if $inf_repel >= REPEL_STAGES.size
       $PokemonGlobal.repel = REPEL_STAGES[$inf_repel]

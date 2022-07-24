@@ -1,7 +1,7 @@
 #New Level Cap System
 module Settings
   #UPDATE THIS WITH EVERY PUSH!!!!!!!!!!!!!!
-  GAME_VERSION = "0.3.2"
+  GAME_VERSION = "0.3.3"
   #==================================#
 
   LEVEL_CAP_SWITCH = true
@@ -106,6 +106,29 @@ module Game
     $PokemonEncounters.setup($game_map.map_id)
     $game_map.autoplay
     $game_map.update
+  end
+  def write_version
+    File.open("version.txt", "wb") { |f|
+      version = Settings::GAME_VERSION
+      f.write("#{version}")
+    }
+  end
+  def self.set_up_system
+    SaveData.move_old_windows_save if System.platform[/Windows/]
+    save_data = (SaveData.exists?) ? SaveData.read_from_file(SaveData::FILE_PATH) : {}
+    if save_data.empty?
+      SaveData.initialize_bootup_values
+    else
+      SaveData.load_bootup_values(save_data)
+    end
+    # Set resize factor
+    pbSetResizeFactor([$PokemonSystem.screensize, 4].min)
+    # Set language (and choose language if there is no save file)
+    if Settings::LANGUAGES.length >= 2
+      $PokemonSystem.language = pbChooseLanguage if save_data.empty?
+      pbLoadMessages('Data/' + Settings::LANGUAGES[$PokemonSystem.language][1])
+    end
+    write_version
   end
 end
 
@@ -502,12 +525,10 @@ class PokemonLoadScreen
       case command
       when cmd_continue
         @scene.pbEndScene
-        write_version
         Game.load(@save_data)
         return
       when cmd_new_game
         @scene.pbEndScene
-        write_version
         Game.start_new
         return
       when cmd_mystery_gift

@@ -22,7 +22,7 @@ $inf_repel = 0
   end
 end
 
-SPEEDUP_STAGES = [1,4]
+SPEEDUP_STAGES = [1,3]
 $GameSpeed = 0
 $frame = 0
 $CanToggle = true

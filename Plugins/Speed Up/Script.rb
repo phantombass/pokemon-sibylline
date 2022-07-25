@@ -26,7 +26,7 @@ SPEEDUP_STAGES = [1,3]
 $GameSpeed = 0
 $frame = 0
 $CanToggle = true
-$repel_toggle = true
+$repel_toggle = false
 
 module Graphics
   class << Graphics

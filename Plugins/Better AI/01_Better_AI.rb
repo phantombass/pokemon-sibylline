@@ -286,6 +286,8 @@ class Battle::AI
 		$shouldPri = false
 		$shouldHeal = false
 		$fakeOut = false
+		$shouldAttack = false
+		$shouldHaze = false
     shouldSwitch = forceSwitch
     batonPass = -1
 		teleport = -1
@@ -406,8 +408,28 @@ class Battle::AI
 					switchChance = 0
 					for move in battler.moves
 						$has_prio = true if move.priority > 0 && !move.statusMove?
-						$fakeOut = true if move.function == "012"
+						$fakeOut = true if move.function == "FlinchTargetFailsIfNotUserFirstTurn"
+						$has_haze = true if move.function == "ResetAllBattlersStatStages"
 						$has_healing = true if move.healingMove?
+					end
+					if (target.stages[:ATTACK] >= 2 || target.stages[:SPECIAL_ATTACK] >= 2) && !battler.hasActiveAbility?(:UNAWARE) && $has_haze == false
+						$shouldAttack = true
+					end
+					if $has_haze == true
+						stages = 0
+						@battle.eachBattler do |b|
+							totalStages = 0
+							GameData::Stat.each_battle { |s| totalStages += b.stages[s.id] }
+							if b.opposes?(user)
+								stages += totalStages
+							else
+								stages -= totalStages
+							end
+						end
+						haze_score = stages*10
+						haze_score += 50 if stages > 0
+						haze_score += 20 if [:PHYSICALWALL,:SPECIALWALL,:PIVOT,:STALLBREAKER].include?($role) && stages > 0
+						$shouldHaze = (pbAIRandom(100)<haze_score)
 					end
 				if type1Target == (battler_SE || battler_2SE) || type2Target == (battler_SE || battler_2SE)
 					if !faster && $shouldPri == false
@@ -603,185 +625,308 @@ class Battle::AI
 					end
 				end
 			end
-      if !target.fainted? && target.lastMoveUsed != nil &&
+			if !target.fainted? && target.lastMoveUsed != nil &&
 				if battler.lastMoveUsed == nil
 					return false
 				end
-        moveData = GameData::Move.get(target.lastMoveUsed)
+				moveData = GameData::Move.get(target.lastMoveUsed)
 				moveData2 = GameData::Move.get(battler.lastMoveUsed)
-        moveType = moveData.type
+				moveType = moveData.type
 				moveType2 = moveData2.type
-        typeMod = pbCalcTypeMod(moveType,target,battler)
+				typeMod = pbCalcTypeMod(moveType,target,battler)
 				typeMod2 = pbCalcTypeMod(moveType2,target,battler)
-        if typeMod == (battler_SE || battler_2SE) && moveData.base_damage>50
+				if typeMod == (battler_SE || battler_2SE) && moveData.base_damage>50
 					if skill>=PBTrainerAI.beastMode
-          	switchChance = 90
-          	shouldSwitch = (pbAIRandom(100)<switchChance)
+						switchChance = 90
+						shouldSwitch = (pbAIRandom(100)<switchChance)
 					else
 						switchChance = 50
-          	shouldSwitch = (pbAIRandom(100)<switchChance)
+						shouldSwitch = (pbAIRandom(100)<switchChance)
 					end
-        end
+				end
 				if typeMod2 != battler_SE && target.hp > target.totalhp/3
 					if !faster
 						if skill>=PBTrainerAI.beastMode
-	          	switchChance = 85
-	          	shouldSwitch = (pbAIRandom(100)<switchChance)
+							switchChance = 85
+							shouldSwitch = (pbAIRandom(100)<switchChance)
 						else
 							switchChance = 30
-	          	shouldSwitch = (pbAIRandom(100)<switchChance)
+							shouldSwitch = (pbAIRandom(100)<switchChance)
 						end
 					end
 				end
-      end
-    end
-    # Pokémon can't do anything (must have been in battle for at least 5 rounds)
-    if !@battle.pbCanChooseAnyMove?(idxBattler) && battler.turnCount && battler.turnCount>=0
-      shouldSwitch = true
-    end
+			end
+		end
+		# Pokémon can't do anything (must have been in battle for at least 5 rounds)
+		if !@battle.pbCanChooseAnyMove?(idxBattler) && battler.turnCount && battler.turnCount>=0
+			shouldSwitch = true
+		end
 		if battler.effects[PBEffects::Substitute] > 0
 			shouldSwitch = false
 		end
-		if [:SETUPSWEEPER,:WINCON].include?(battler.role) && $enem_prio == false
-			shouldSwitch = false
+		if [:WINCON,:SETUPSWEEPER,:NONE].include?($role) && $enem_prio == false
+			switchChance = 0
+			if $targ_move != nil
+				for i in $targ_move
+					switchChance += 25 if pbRoughDamage(i,target,battler,skill,$baseDmg) >= battler.hp
+					switchChance -= 25 if pbRoughDamage(i,target,battler,skill,$baseDmg) < battler.hp/2
+				end
+			end
+			shouldSwitch = (pbAIRandom(100)<switchChance)
+			if $has_healing && shouldSwitch == false
+				healChance = (battler.hp/battler.totalhp)*100
+				if healChance < 67
+					$shouldHeal = healChance <= 50 ? true : pbAIRandom(100)<healChance
+				else
+					$shouldHeal = pbAIRandom(100)>healChance
+				end
+			end
 			if battler.stages[:ATTACK] <= 0 || battler.stages[:SPECIAL_ATTACK] <= 0
-				$shouldBoost = true
+				$shouldBoost = true if shouldSwitch == false && $shouldHeal == false
 			end
 			if battler.stages[:SPEED] <= 0 && !faster
-				$shouldBoostSpeed = true
+				$shouldBoostSpeed = true if shouldSwitch == false && $shouldHeal == false
 			end
 		end
 		@battle.pbParty(idxBattler).each_with_index do |pkmn,i|
 			if !@battle.pbCanSwitch?(idxBattler,i)
+				$canSwitch = false
 				$shouldPri = true if ((battler.hp < battler.totalhp/3) && $has_prio)
 				next if $targ_move == nil
 				for i in $targ_move
 					if pbRoughDamage(i,target,battler,skill,$baseDmg) >= battler.hp && (battler.stages[:ATTACK] > 0 || battler.stages[:SPECIAL_ATTACK] > 0) && $has_prio
 						$shouldPri = true
-					elsif pbRoughDamage(i,target,battler,skill,$baseDmg) >= battler.hp && $has_prio
+					elsif pbRoughDamage(i,target,battler,skill,$baseDmg) >= battler.hp && i.priority > 0
 						$shouldPri = true
-					else
-						$shouldBoost = true
+					elsif pbRoughDamage(i,target,battler,skill,$baseDmg) < battler.hp/2
+						$shouldBoost = true if battler.hp>=battler.totalhp/2
+						if $has_healing
+							healChance = (battler.hp/battler.totalhp)*100
+							if healChance < 67
+								$shouldHeal = healChance <= 50 ? true : pbAIRandom(100)<healChance
+							else
+								$shouldHeal = pbAIRandom(100)>healChance
+							end
+						end
+						$shouldBoost = false if $shouldHeal
 					end
 				end
 			end
 		end
 		if battler.stages[:ATTACK] > 0 || battler.stages[:SPECIAL_ATTACK] > 0
-			$shouldPri = true if $has_prio
-			switchChance = 0 if [:SPECIALBREAKER,:SETUPSWEEPER,:WINCON].include?(battler.role)
-			shouldSwitch = $has_prio == false ? pbAIRandom(100)<switchChance : false
+			$shouldPri = true if $has_prio && (!faster || battler.hp<battler.totalhp/4)
+			switchChance = 0 if [:SETUPSWEEPER,:SPECIALBREAKER,:PHYSICALBREAKER,:NONE].include?($role)
+			if $role == :WINCON && $canSwitch
+				if $targ_move != nil
+					for i in $targ_move
+						if pbRoughDamage(i,target,battler,skill,$baseDmg) < battler.hp/2
+							if !faster && battler.hp > battler.hp/2
+								$shouldBoostSpeed = true
+							else
+								for move in battler.moves
+									baseDmg = pbMoveBaseDamage(move,battler,target,skill)
+									$shouldBoost if pbRoughDamage(move,battler,target,skill,baseDmg) < target.hp && !$has_healing
+									if $has_healing
+										healChance = (battler.hp/battler.totalhp)*100
+										if healChance < 67
+											$shouldHeal = healChance <= 50 ? true : pbAIRandom(100)<healChance
+										else
+											$shouldHeal = pbAIRandom(100)>healChance
+										end
+									end
+								end
+							end
+							switchChance = 0
+						end
+						if pbRoughDamage(i,target,battler,skill,$baseDmg) >= battler.hp && !faster
+							for move in battler.moves
+								baseDmg = pbMoveBaseDamage(move,battler,target,skill)
+								ch += 2 if pbRoughDamage(move,battler,target,skill,baseDmg) < target.hp
+								ch -= 2 if pbRoughDamage(move,battler,target,skill,baseDmg) >= target.hp
+							end
+							switchChance = i.priority > 0 ? 100 : (92 + ch)
+						end
+					end
+				end
+			shouldSwitch = pbAIRandom(100)<switchChance
 		end
+	end
 		if battler.stages[:SPEED] > 0
-			switchChance = 0 if [:SPECIALBREAKER,:SETUPSWEEPER,:WINCON].include?(battler.role)
-			shouldSwitch = $enem_prio == true ? pbAIRandom(100)<switchChance : false
+			$shouldBoostSpeed = false if faster
+			switchChance = 0 if [:SETUPSWEEPER,:SPECIALBREAKER,:PHYSICALBREAKER,:NONE].include?($role)
+			if $role == :WINCON && $canSwitch
+				if $targ_move == nil
+					for i in $targ_move
+						if pbRoughDamage(i,target,battler,skill,$baseDmg) > battler.hp && (!faster)
+							for move in battler.moves
+								baseDmg = pbMoveBaseDamage(move,battler,target,skill)
+								ch += 5 if pbRoughDamage(move,battler,target,skill,baseDmg) < target.hp
+								ch -= 5 if pbRoughDamage(move,battler,target,skill,baseDmg) >= target.hp
+							end
+							switchChance = i.priority > 0 ? 100 : (80 + ch)
+						end
+					end
+				end
+			end
+			shouldSwitch = pbAIRandom(100)<switchChance
 		end
-    # Pokémon is Perish Songed and has Baton Pass
-    if skill>=PBTrainerAI.highSkill && battler.effects[PBEffects::PerishSong]==1
-      battler.eachMoveWithIndex do |m,i|
-        next if m.function!="SwitchOutUserPassOnEffects"   # Baton Pass
-        next if !@battle.pbCanChooseMove?(idxBattler,i,false)
-        batonPass = i
-        break
-      end
-    end
-    # Pokémon will faint because of bad poisoning at the end of this round, but
-    # would survive at least one more round if it were regular poisoning instead
-    if battler.status==GameData::Status.get(:POISON).id && battler.statusCount>0 &&
-       skill>=PBTrainerAI.highSkill
-      toxicHP = battler.totalhp/16
-      nextToxicHP = toxicHP*(battler.effects[PBEffects::Toxic]+1)
-      if battler.hp<=nextToxicHP && battler.hp>toxicHP*2
-        shouldSwitch = true if pbAIRandom(100)<80
-      end
-    end
-    # Pokémon is Encored into an unfavourable move
-    if battler.effects[PBEffects::Encore]>0 && skill>=PBTrainerAI.mediumSkill
-      idxEncoredMove = battler.pbEncoredMoveIndex
-      if idxEncoredMove>=0
-        scoreSum   = 0
-        scoreCount = 0
-        battler.eachOpposing do |b|
-          scoreSum += pbGetMoveScore(battler.moves[idxEncoredMove],battler,b,skill)
-          scoreCount += 1
-        end
-        if scoreCount>0 && scoreSum/scoreCount<=20
-          shouldSwitch = true if pbAIRandom(100)<80
-        end
-      end
-    end
-    # If there is a single foe and it is resting after Hyper Beam or is
-    # Truanting (i.e. free turn)
-    if @battle.pbSideSize(battler.index+1)==1 &&
-       !battler.pbDirectOpposing.fainted? && skill>=PBTrainerAI.highSkill
-      opp = battler.pbDirectOpposing
-      if opp.effects[PBEffects::HyperBeam]>0 ||
-         (opp.hasActiveAbility?(:TRUANT) && opp.effects[PBEffects::Truant])
-        shouldSwitch = false if pbAIRandom(100)<80
-      end
-    end
-    # Sudden Death rule - I'm not sure what this means
-    if @battle.rules["suddendeath"] && battler.turnCount>0
-      if battler.hp<=battler.totalhp/4 && pbAIRandom(100)<30
-        shouldSwitch = true
-      elsif battler.hp<=battler.totalhp/2 && pbAIRandom(100)<80
-        shouldSwitch = true
-      end
-    end
-    # Pokémon is about to faint because of Perish Song
-    if battler.effects[PBEffects::PerishSong]==1
-      shouldSwitch = true
-    end
-    if shouldSwitch
-      list = []
-      @battle.pbParty(idxBattler).each_with_index do |pkmn,i|
-        next if !@battle.pbCanSwitch?(idxBattler,i)
-        # If perish count is 1, it may be worth it to switch
-        # even with Spikes, since Perish Song's effect will end
-        if battler.effects[PBEffects::PerishSong]!=1
-          # Will contain effects that recommend against switching
-          spikes = battler.pbOwnSide.effects[PBEffects::Spikes]
-          # Don't switch to this if too little HP
-          if spikes>0
-            spikesDmg = [8,6,4][spikes-1]
-            if pkmn.hp<=pkmn.totalhp/spikesDmg
-              next if !pkmn.hasType?(:FLYING) && !pkmn.hasActiveAbility?(:LEVITATE)
-            end
-          end
-        end
-        # moveType is the type of the target's last used move
-        if moveType>=0 && Effectiveness.ineffective?(pbCalcTypeMod(moveType,battler,battler))
-          weight = 80
-          typeMod = pbCalcTypeModPokemon(pkmn,battler.pbDirectOpposing(true))
-          if GameData::Type.isSuperEffective?(typeMod.to_f/Effectiveness::NORMAL_EFFECTIVE)
-            # Greater weight if new Pokemon's type is effective against target
-            weight = 100
-          end
-          list.unshift(i) if pbAIRandom(100)<weight   # Put this Pokemon first
-        elsif moveType>=0 && Effectiveness.resistant?(pbCalcTypeMod(moveType,battler,battler))
-          weight = 40
-          typeMod = pbCalcTypeModPokemon(pkmn,battler.pbDirectOpposing(true))
-          if GameData::Type.isSuperEffective?(typeMod.to_f/Effectiveness::NORMAL_EFFECTIVE)
-            # Greater weight if new Pokemon's type is effective against target
-            weight = 60
-          end
-          list.unshift(i) if pbAIRandom(100)<weight   # Put this Pokemon first
-        else
-          list.push(i)   # put this Pokemon last
-        end
-      end
-      if list.length>0
-        if batonPass>=0 && @battle.pbRegisterMove(idxBattler,batonPass,false)
-          PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will use Baton Pass to avoid Perish Song")
-          return true
-        end
-        if @battle.pbRegisterSwitch(idxBattler,list[0])
-          PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will switch with " +
-                      "#{@battle.pbParty(idxBattler)[list[0]].name}")
-          return true
-        end
-      end
-    end
-    return false
+		# Pokémon is Perish Songed and has Baton Pass
+		if skill>=PBTrainerAI.highSkill && battler.effects[PBEffects::PerishSong]==1
+			battler.eachMoveWithIndex do |m,i|
+				next if m.function!="SwitchOutUserPassOnEffects"   # Baton Pass
+				next if !@battle.pbCanChooseMove?(idxBattler,i,false)
+				batonPass = i
+				break
+			end
+		end
+
+		if skill>=PBTrainerAI.highSkill
+			battler.eachMoveWithIndex do |m,i|
+				next if m.function!="SwitchOutUserStatusMove"   # Teleport
+				next if !@battle.pbCanChooseMove?(idxBattler,i,false)
+				teleport = i
+				break
+			end
+		end
+		# Pokémon will faint because of bad poisoning at the end of this round, but
+		# would survive at least one more round if it were regular poisoning instead
+		if battler.status==GameData::Status.get(:POISON).id && battler.statusCount>0 &&
+			 skill>=PBTrainerAI.highSkill
+			toxicHP = battler.totalhp/16
+			nextToxicHP = toxicHP*(battler.effects[PBEffects::Toxic]+1)
+			if battler.hp<=nextToxicHP && battler.hp>toxicHP*2
+				shouldSwitch = true if pbAIRandom(100)<80
+			end
+		end
+		# Pokémon is Encored into an unfavourable move
+		if battler.effects[PBEffects::Encore]>0 && skill>=PBTrainerAI.mediumSkill
+			idxEncoredMove = battler.pbEncoredMoveIndex
+			if idxEncoredMove>=0
+				scoreSum   = 0
+				scoreCount = 0
+				battler.eachOpposing do |b|
+					scoreSum += pbGetMoveScore(battler.moves[idxEncoredMove],battler,b,skill)
+					scoreCount += 1
+				end
+				if scoreCount>0 && scoreSum/scoreCount<=20
+					shouldSwitch = true if pbAIRandom(100)<80
+				end
+			end
+		end
+		# If there is a single foe and it is resting after Hyper Beam or is
+		# Truanting (i.e. free turn)
+		if @battle.pbSideSize(battler.index+1)==1 &&
+			 !battler.pbDirectOpposing.fainted? && skill>=PBTrainerAI.highSkill
+			opp = battler.pbDirectOpposing
+			if opp.effects[PBEffects::HyperBeam]>0 ||
+				 (opp.hasActiveAbility?(:TRUANT) && opp.effects[PBEffects::Truant])
+				shouldSwitch = false
+			end
+		end
+		# Sudden Death rule - I'm not sure what this means
+		if @battle.rules["suddendeath"] && battler.turnCount>0
+			if battler.hp<=battler.totalhp/4 && pbAIRandom(100)<30
+				shouldSwitch = true
+			elsif battler.hp<=battler.totalhp/2 && pbAIRandom(100)<80
+				shouldSwitch = true
+			end
+		end
+		# Pokémon is about to faint because of Perish Song
+		if battler.effects[PBEffects::PerishSong]==1
+			shouldSwitch = true
+		end
+		if shouldSwitch
+			list = []
+			@battle.pbParty(idxBattler).each_with_index do |pkmn,i|
+				next if !@battle.pbCanSwitch?(idxBattler,i)
+				# If perish count is 1, it may be worth it to switch
+				# even with Spikes, since Perish Song's effect will end
+				if battler.effects[PBEffects::PerishSong]!=1
+					# Will contain effects that recommend against switching
+					spikes = battler.pbOwnSide.effects[PBEffects::Spikes]
+					# Don't switch to this if too little HP
+					if spikes>0
+						spikesDmg = [8,6,4][spikes-1]
+						if pkmn.hp<=pkmn.totalhp/spikesDmg
+							next if !battler.airborne? && !battler.hasActiveAbility?(:MAGICGUARD)
+						end
+					end
+				end
+				# moveType is the type of the target's last used move
+				if moveType>=0 && Effectiveness.ineffective?(pbCalcTypeMod(moveType,battler,battler))
+					weight = 80
+					typeMod = pbCalcTypeModPokemon(pkmn,battler.pbDirectOpposing(true))
+					if GameData::Type.isSuperEffective?(typeMod.to_f/Effectiveness::NORMAL_EFFECTIVE)
+						# Greater weight if new Pokemon's type is effective against target
+						weight = 100
+					end
+					list.unshift(i) if pbAIRandom(100)<weight   # Put this Pokemon first
+				elsif moveType>=0 && Effectiveness.super_effective?(pbCalcTypeMod(moveType,battler,battler))
+					list.push(i)
+				elsif $role == :WINCON
+					list.push(i)
+				elsif moveData != nil && moveData.category == 0 && $role == :PHYSICALWALL
+					weight = 70
+					if $targ_move != nil
+						for j in $targ_move.length
+							if $targ_move[j].category == 0
+								weight += 10
+							end
+						end
+					end
+					list.unshift(i)  if pbAIRandom(100)<weight
+				elsif moveData != nil && moveData.category == 1 && $role == :SPECIALWALL
+					weight = 70
+					if $targ_move != nil
+						for j in $targ_move.length
+							if $targ_move[j].category == 1
+								weight += 10
+							end
+						end
+					end
+					list.unshift(i)  if pbAIRandom(100)<weight
+				elsif moveData != nil && moveData.category == 2 && $role == :STALLBREAKER
+					weight = 80
+					if $targ_move != nil
+						for j in $targ_move.length
+							if $targ_move[j].category == 2
+								weight += 10
+							end
+						end
+					end
+					list.unshift(i)  if pbAIRandom(100)<weight
+				elsif $role == :PIVOT
+					weight = 80
+					list.unshift(i)  if pbAIRandom(100)<weight
+				elsif moveType>=0 && Effectiveness.resistant?(pbCalcTypeMod(moveType,battler,battler))
+					weight = 40
+					typeMod = pbCalcTypeModPokemon(pkmn,battler.pbDirectOpposing(true))
+					if GameData::Type.isSuperEffective?(typeMod.to_f/Effectiveness::NORMAL_EFFECTIVE)
+						# Greater weight if new Pokemon's type is effective against target
+						weight = 60
+					end
+					list.unshift(i) if pbAIRandom(100)<weight   # Put this Pokemon first
+				else
+					list.push(i)   # put this Pokemon last
+				end
+			end
+			if list.length>0
+				if batonPass>=0 && @battle.pbRegisterMove(idxBattler,batonPass,false)
+					PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will use Baton Pass to avoid Perish Song")
+					return true
+				end
+				if teleport>=0 && @battle.pbRegisterMove(idxBattler,teleport,false)
+					PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will use Teleport.")
+					return true
+				end
+				if @battle.pbRegisterSwitch(idxBattler,list[0])
+					PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will switch with " +
+											"#{@battle.pbParty(idxBattler)[list[0]].name}")
+					return true
+				end
+			end
+		end
+		return false
 	end
 end
 	#=============================================================================

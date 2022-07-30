@@ -87,7 +87,7 @@ end
 
 MenuHandlers.add(:pause_menu, :field_effect, {
   "name"      => _INTL("Field Effects"),
-  "order"     => 46,
+  "order"     => 47,
   "condition" => proc { next $player.has_field_effects },
   "effect"    => proc { |menu|
     pbPlayDecisionSE

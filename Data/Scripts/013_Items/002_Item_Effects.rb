@@ -134,6 +134,7 @@ ItemHandlers::UseInField.add(:MAXREPEL, proc { |item|
   next pbRepel(item, 250)
 })
 
+=begin
 EventHandlers.add(:on_player_step_taken, :repel_counter,
   proc {
     next if $PokemonGlobal.repel <= 0 || $game_player.terrain_tag.ice   # Shouldn't count down if on ice
@@ -155,6 +156,7 @@ EventHandlers.add(:on_player_step_taken, :repel_counter,
     pbUseItem($bag, ret) if ret
   }
 )
+=end
 
 ItemHandlers::UseInField.add(:BLACKFLUTE, proc { |item|
   pbUseItemMessage(item)

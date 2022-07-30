@@ -513,7 +513,7 @@ MenuHandlers.add(:party_menu, :relearn, {
 MenuHandlers.add(:party_menu, :egg_moves, {
   "name"      => _INTL("Teach Egg Moves"),
   "order"     => 32,
-  "condition"   => proc { next ($PokemonSystem.min_grinding == 1 && $PokemonSystem.difficulty > 1) },
+  "condition"   => proc { next ($PokemonSystem.min_grinding == 1 && $PokemonSystem.difficulty > 1 && $PokemonSystem.level_caps == 0) },
   "effect"    => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
     if pkmn.has_egg_move?
@@ -527,7 +527,7 @@ MenuHandlers.add(:party_menu, :egg_moves, {
 MenuHandlers.add(:party_menu, :min_grinding, {
   "name"      => _INTL("Minimal Grinding..."),
   "order"     => 33,
-  "condition"   => proc { next ($PokemonSystem.min_grinding == 1 && $PokemonSystem.difficulty > 1) },
+  "condition"   => proc { next ($PokemonSystem.min_grinding == 1 && $PokemonSystem.difficulty > 1 && $PokemonSystem.level_caps == 0) },
   "effect"    => proc { |screen, party, party_idx|
     @viewport1 = Viewport.new(0, 0, Graphics.width, Graphics.height)
     @viewport1.z = 99999

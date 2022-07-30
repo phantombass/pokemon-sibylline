@@ -503,9 +503,9 @@ ItemHandlers::UseOnPokemon.add(:RARECANDY, proc { |item, qty, pkmn, scene|
 class Trainer
   def heal_party
     if $PokemonSystem.nuzlocke == 0
-      @party.each { |pkmn| pkmn.heal }
+      pbEachPokemon { |poke,_box| poke.heal if !poke.fainted?}
     else
-      @party.each { |pkmn| pkmn.heal if !pkmn.fainted?}
+      pbEachPokemon { |poke,_box| poke.heal}
     end
   end
 end

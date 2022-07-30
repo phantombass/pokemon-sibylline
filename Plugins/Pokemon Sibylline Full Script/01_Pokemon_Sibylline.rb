@@ -1,7 +1,7 @@
 #New Level Cap System
 module Settings
   #UPDATE THIS WITH EVERY PUSH!!!!!!!!!!!!!!
-  GAME_VERSION = "0.3.7"
+  GAME_VERSION = "0.3.8"
   #==================================#
 
   LEVEL_CAP_SWITCH = true
@@ -38,6 +38,43 @@ class PokemonSystem
   end
 end
 
+MenuHandlers.add(:pause_menu, :box_link, {
+  "name"      => _INTL("PC Box Link"),
+  "order"     => 46,
+  "condition" => proc { next $player.party_count > 0 },
+  "effect"    => proc { |menu|
+    pbPlayDecisionSE
+    menu.pbHideMenu
+    menu.pbHideLevelCap
+    pbMessage("Which would you like to do?\\ch[34,4,Access PC,Heal,Cancel]")
+    if $game_variables[34] == 0
+     if $game_switches[73] == true
+       pbMessage(_INTL("You cannot access the PC in here."))
+       menu.pbShowMenu
+     else
+      pbFadeOutIn {
+        scene = PokemonStorageScene.new
+        screen = PokemonStorageScreen.new(scene,$PokemonStorage)
+        screen.pbStartScreen(0)
+        menu.pbShowMenu
+      }
+     end
+    elsif $game_variables[34] == 1
+      if ($game_switches[73] == true && $PokemonSystem.difficulty == 3)
+        pbMessage(_INTL("You cannot use this in here."))
+        menu.pbShowMenu
+      else
+        $Trainer.heal_party
+        pbMessage(_INTL("Your party was healed!"))
+        menu.pbShowMenu
+      end
+    else
+      menu.pbShowMenu
+    end
+  }
+}
+)
+
 MenuHandlers.add(:options_menu, :level_caps, {
   "name"        => _INTL("Level Caps"),
   "order"       => 90,
@@ -55,6 +92,7 @@ MenuHandlers.add(:options_menu, :difficulty, {
   "type"        => EnumOption,
   "parameters"  => [_INTL("Easy"), _INTL("Normal"), _INTL("Hard"), _INTL("Insane")],
   "description" => _INTL("Set the Difficulty level."),
+  "condition"   => proc { next $PokemonSystem.difficulty < 3 },
   "get_proc"    => proc { next $PokemonSystem.difficulty},
   "set_proc"    => proc { |value, _sceme| $PokemonSystem.difficulty = value }
 })
@@ -560,5 +598,29 @@ class PokemonLoadScreen
         pbPlayBuzzerSE
       end
     end
+  end
+end
+class Battle::Battler
+  def pbObedienceCheck?(choice)
+    return true if usingMultiTurnAttack?
+    return true if choice[0] != :UseMove
+    return true if !@battle.internalBattle
+    return true if !@battle.pbOwnedByPlayer?(@index)
+    disobedient = false
+    # Pokémon may be disobedient; calculate if it is
+    badge_level = 10 * (@battle.pbPlayer.badge_count + 1)
+    badge_level = GameData::GrowthRate.max_level if @battle.pbPlayer.badge_count >= 8
+    badge_level = LEVEL_CAP[$game_system.level_cap] if @battle.pbPlayer.badge_count >= 8 && $PokemonSystem.level_caps == 0
+    if Settings::ANY_HIGH_LEVEL_POKEMON_CAN_DISOBEY ||
+       (Settings::FOREIGN_HIGH_LEVEL_POKEMON_CAN_DISOBEY && @pokemon.foreign?(@battle.pbPlayer))
+      if @level > badge_level
+        a = ((@level + badge_level) * @battle.pbRandom(256) / 256).floor
+        disobedient |= (a >= badge_level)
+      end
+    end
+    disobedient |= !pbHyperModeObedience(choice[2])
+    return true if !disobedient
+    # Pokémon is disobedient; make it do something else
+    return pbDisobey(choice, badge_level)
   end
 end

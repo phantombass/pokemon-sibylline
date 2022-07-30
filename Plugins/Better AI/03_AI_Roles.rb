@@ -362,14 +362,38 @@ end
 class Pokemon
   attr_accessor :role
   def role
+    @role = :NONE if (@role == "" || @role == nil)
     return GameData::Role.try_get(@role)
   end
+
+  def role=(value)
+    return if value && !GameData::Role.exists?(value)
+    @role = :NONE if !value
+    @role = (value) ? GameData::Role.get(value).id : value
+  end  
 end
 
 class Battle::Battler
   attr_accessor :role
   def role
+    @role = :NONE if (@role == "" || @role == nil)
     return GameData::Role.try_get(@role)
+  end
+
+  def role=(value)
+    return if value && !GameData::Role.exists?(value)
+    @role = :NONE if !value
+    @role = (value) ? GameData::Role.get(value).id : value
+  end
+  alias init_role pbInitBlank
+  def pbInitBlank
+    init_role
+    @role = nil
+  end
+  alias pbInitRole pbInitPokemon
+  def pbInitPokemon(pkmn, idxParty)
+    pbInitRole(pkmn, idxParty)
+    @role = pkmn.role
   end
 end
 
@@ -467,4 +491,10 @@ GameData::Role.register({
   :id           => :SCREENS,
   :id_number    => 15,
   :name         => _INTL("Screens")
+})
+
+GameData::Role.register({
+  :id           => :NONE,
+  :id_number    => 16,
+  :name         => _INTL("None")
 })

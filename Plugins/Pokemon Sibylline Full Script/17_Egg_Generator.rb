@@ -1,5 +1,10 @@
 def random_eggs
   egg_list = [:SOLOSIS,:SLAKOTH,:WOOBAT]
+  pbEachPokemon { |poke,_box|
+    if egg_list.include?(poke.species)
+      egg_list.delete(poke.species)
+    end
+  }
   return egg_list
 end
 

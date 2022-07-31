@@ -195,38 +195,38 @@ class NewDexNav
       end
       pLoc = $game_map.terrain_tag($game_player.x,$game_player.y)
       if GameData::TerrainTag.get(pLoc).id == :Grass || GameData::TerrainTag.get(pLoc).id == :None
-        if $MapFactory.getFacingTerrainTag == :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag == :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :Land if $PokemonEncounters.has_land_encounters?
           $encTerr = :Cave if !$PokemonEncounters.has_land_encounters?
         end
       elsif GameData::TerrainTag.get(pLoc).id == :Rock
-        if $MapFactory.getFacingTerrainTag == :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag == :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :Cave
         end
       elsif GameData::TerrainTag.get(pLoc).id == :HighBridge
-        if $MapFactory.getFacingTerrainTag == :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag == :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :HighBridge
         end
       elsif GameData::TerrainTag.get(pLoc).id == :Graveyard
-        if $MapFactory.getFacingTerrainTag == :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag == :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :Graveyard
         end
       elsif GameData::TerrainTag.get(pLoc).id == :Snow
-        if $MapFactory.getFacingTerrainTag== :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag== :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :Snow if $PokemonEncounters.has_snow_encounters?
         end
       elsif GameData::TerrainTag.get(pLoc).id == :Sandy || GameData::TerrainTag.get(pLoc).id == :Sand
-        if $MapFactory.getFacingTerrainTag == :Water || $MapFactory.getFacingTerrainTag == :StillWater || $MapFactory.getFacingTerrainTag == :DeepWater
+        if $map_factory.getFacingTerrainTag == :Water || $map_factory.getFacingTerrainTag == :StillWater || $map_factory.getFacingTerrainTag == :DeepWater
           $encTerr = :OldRod
         else
           $encTerr = :Sandy if $PokemonEncounters.has_sandy_encounters?

@@ -1126,3 +1126,7 @@ Description = Doubles Special Attack.
 [FAIRYBUBBLE]
 Name = Fairy Bubble
 Description = Boosts Fairy moves, weakens Poison, and prevents status.
+#-------------------------------
+[NITRIC]
+Name = Nitric
+Description = Allows Poison moves to hit Steel-types.

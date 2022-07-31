@@ -87,6 +87,37 @@ class Battle::Move
     end
     return ret
   end
+  def pbCalcTypeModSingle(moveType, defType, user, target)
+    ret = Effectiveness.calculate_one(moveType, defType)
+    if Effectiveness.ineffective_type?(moveType, defType)
+      # Ring Target
+      if target.hasActiveItem?(:RINGTARGET)
+        ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+      end
+      # Foresight
+      if (user.hasActiveAbility?(:SCRAPPY) || target.effects[PBEffects::Foresight]) &&
+         defType == :GHOST
+        ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+      end
+      if user.hasActiveAbility?(:NITRIC) && defType == :STEEL
+        ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+      end
+      # Miracle Eye
+      if target.effects[PBEffects::MiracleEye] && defType == :DARK
+        ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+      end
+    elsif Effectiveness.super_effective_type?(moveType, defType)
+      # Delta Stream's weather
+      if target.effectiveWeather == :StrongWinds && defType == :FLYING
+        ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+      end
+    end
+    # Grounded Flying-type Pokémon become susceptible to Ground moves
+    if !target.airborne? && defType == :FLYING && moveType == :GROUND
+      ret = Effectiveness::NORMAL_EFFECTIVE_ONE
+    end
+    return ret
+  end
   def pbCalcDamageMultipliers(user, target, numTargets, type, baseDmg, multipliers)
     # Global abilities
     if (@battle.pbCheckGlobalAbility(:DARKAURA) && type == :DARK) ||

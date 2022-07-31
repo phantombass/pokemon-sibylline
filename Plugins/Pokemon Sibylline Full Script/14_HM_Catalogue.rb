@@ -333,7 +333,7 @@ end
 
 def pbSurf
   return false if $game_player.pbFacingEvent
-  return false if $game_player.pbHasDependentEvents?
+  return false if $game_player.has_follower?
   if !$game_switches[HMCatalogue::Surf]
     return false
   end
@@ -476,7 +476,7 @@ end
 
 def canUseMoveFly?
   showmsg = true
-  if $game_player.pbHasDependentEvents?
+  if $game_player.has_follower?
     pbMessage(_INTL("It can't be used when you have someone with you.")) if showmsg
     return false
   end

@@ -2521,7 +2521,7 @@ Generation = 1
 Evolutions = WARTORTLE,Level,16
 #-------------------------------
 [WARTORTLE,2]
-Name = Talinian Wartortle
+FormName = Talinian Wartortle
 Types = WATER,GHOST
 BaseStats = 80,50,70,55,95,70
 GenderRatio = FemaleOneEighth
@@ -2546,7 +2546,7 @@ Generation = 1
 Evolutions = BLASTOISE,Level,34
 #-------------------------------
 [BLASTOISE,2]
-Name = Talinian Blastoise
+FormName = Talinian Blastoise
 Types = WATER,GHOST
 BaseStats = 110,60,80,75,125,80
 GenderRatio = FemaleOneEighth
@@ -2570,7 +2570,7 @@ Pokedex = The waterspouts that protrude from its shell are highly accurate. Thei
 Generation = 1
 #-------------------------------
 [MANKEY,1]
-Name = Talinian Mankey
+FormName = Talinian Mankey
 Types = SOUND
 BaseStats = 35,65,30,60,75,90
 GenderRatio = Female50Percent
@@ -2597,7 +2597,7 @@ Generation = 1
 Evolutions = PRIMEAPE,Level,28
 #-------------------------------
 [PRIMEAPE,1]
-Name = Talinian Primeape
+FormName = Talinian Primeape
 Types = SOUND,FIGHTING
 BaseStats = 65,100,75,90,120,75
 GenderRatio = Female50Percent
@@ -3040,4 +3040,29 @@ Category = Slacker
 Pokedex = It sleeps virtually all day and night long. It doesn't change its nest its entire life, but it sometimes travels great distances by swimming in rivers.
 Generation = 3
 Evolutions = VIGOROTH,Level,18
+#-------------------------------
+[HEATMOR,1]
+FormName = Talinian Heatmor
+Types = POISON,DARK
+BaseStats = 85,77,76,85,115,76
+GenderRatio = Female50Percent
+GrowthRate = Medium
+BaseExp = 169
+EVs = SPECIAL_ATTACK,2
+CatchRate = 90
+Happiness = 50
+Abilities = GLUTTONY,NEUTRALIZINGGAS
+HiddenAbilities = NITRIC
+Moves = 1,ACID,1,TACKLE,5,FURYSWIPES,10,SNARL,15,POISONTAIL,20,STOCKPILE,20,SWALLOW,20,SPITUP,25,SLUDGE,30,BIND,35,DARKPULSE,40,HONECLAWS,45,AMNESIA,50,SLUDGEBOMB,55,WICKEDWIND,60,DEATHTOLL
+TutorMoves = TOXIC,NASTYPLOT,SLUDGEBOMB,WICKEDWIND,DARKPULSE,DEATHTOLL,AMNESIA,ATTRACT,BODYSLAM,BRUTALSWING,BURNINGJEALOUSY,DIG,DRAINPUNCH,ENDURE,FACADE,FIREBLAST,FIREPUNCH,FIRESPIN,FLAMETHROWER,FLAREBLITZ,FLING,FOCUSBLAST,GIGADRAIN,GIGAIMPACT,HEATWAVE,HIDDENPOWER,LOWKICK,OVERHEAT,PROTECT,RAINDANCE,REST,ROCKTOMB,ROUND,SCORCHINGSANDS,SHADOWCLAW,SLEEPTALK,SNORE,SOLARBEAM,STOMPINGTANTRUM,SUBSTITUTE,SUNNYDAY,SUPERPOWER,TAUNT,THIEF,THROATCHOP,THUNDERPUNCH,WILLOWISP
+EggMoves = BELCH,CURSE,NIGHTSLASH,SUCKERPUNCH,TICKLE,TOXICSPIKES,SLACKOFF
+EggGroups = Field
+HatchSteps = 5120
+Height = 1.4
+Weight = 58.0
+Color = Red
+Shape = BipedalTail
+Category = Anteater
+Pokedex = Using their very hot, flame-covered tongues, they burn through Durant's steel bodies and consume their insides.
+Generation = 5
 #-------------------------------

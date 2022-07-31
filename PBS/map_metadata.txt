@@ -438,3 +438,10 @@ Outdoor = true
 ShowArea = true
 MapPosition = 0,10,4
 SnapEdges = true
+#-------------------------------
+[085]   # Route 4
+Name = Route 4
+Outdoor = true
+ShowArea = true
+MapPosition = 0,11,4
+SnapEdges = true

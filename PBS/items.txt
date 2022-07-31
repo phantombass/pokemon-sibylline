@@ -6135,6 +6135,16 @@ Flags = Fling_90
 Move = ECHOEDVOICE
 Description = The user attacks the foe with an echoing voice. If this move is used every turn, it does greater damage.
 #-------------------------------
+[TM102]
+Name = TM102
+NamePlural = TM102s
+Pocket = 4
+Price = 2000
+FieldUse = TM
+Flags = Fling_90
+Move = TELEPORT
+Description = The user switches place with a party Pokémon. Also warps to the last Pokémon Center visited.
+#-------------------------------
 [HMCATALOGUE]
 Name = HM Catalogue
 NamePlural = Rotom Catalogues

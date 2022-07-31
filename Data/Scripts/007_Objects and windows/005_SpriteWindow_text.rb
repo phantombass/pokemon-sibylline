@@ -978,8 +978,7 @@ module UpDownArrowMixin
 
   def viewport=(value)
     super
-    @uparrow.viewport   = self.viewport
-    @downarrow.viewport = self.viewport
+    return self.viewport
   end
 
   def color=(value)
@@ -1009,8 +1008,8 @@ module UpDownArrowMixin
     @downarrow.z = self.z + 1
     adjustForZoom(@uparrow)
     adjustForZoom(@downarrow)
-    @uparrow.viewport   = self.viewport
-    @downarrow.viewport = self.viewport
+    #@uparrow.viewport   = self.viewport
+    #@downarrow.viewport = self.viewport
     @uparrow.update
     @downarrow.update
   end

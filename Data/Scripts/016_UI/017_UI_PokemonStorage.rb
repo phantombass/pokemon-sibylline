@@ -203,7 +203,7 @@ class PokemonBoxArrow < Sprite
   def setSprite(sprite)
     if holding?
       @heldpkmn = sprite
-      @heldpkmn.viewport = self.viewport if @heldpkmn
+     # @heldpkmn.viewport = self.viewport if @heldpkmn
       @heldpkmn.z = 1 if @heldpkmn
       @holding = false if !@heldpkmn
       self.z = 2
@@ -221,7 +221,7 @@ class PokemonBoxArrow < Sprite
   def grab(sprite)
     @grabbingState = 1
     @heldpkmn = sprite
-    @heldpkmn.viewport = self.viewport
+    #@heldpkmn.viewport = self.viewport
     @heldpkmn.z = 1
     self.z = 2
   end
@@ -419,7 +419,7 @@ class PokemonBoxSprite < Sprite
       PokemonBox::BOX_WIDTH.times do |k|
         sprite = @pokemonsprites[(j * PokemonBox::BOX_WIDTH) + k]
         if sprite && !sprite.disposed?
-          sprite.viewport = self.viewport
+         # sprite.viewport = self.viewport
           sprite.x = xval
           sprite.y = yval
           sprite.z = 0
@@ -544,7 +544,7 @@ class PokemonBoxPartySprite < Sprite
     Settings::MAX_PARTY_SIZE.times do |j|
       sprite = @pokemonsprites[j]
       next if sprite.nil? || sprite.disposed?
-      sprite.viewport = self.viewport
+      #sprite.viewport = self.viewport
       sprite.x = self.x + xvalues[j]
       sprite.y = self.y + yvalues[j]
       sprite.z = 0

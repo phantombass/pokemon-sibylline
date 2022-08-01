@@ -1,8 +1,10 @@
 def random_eggs_gym_1
   egg_list = [:SOLOSIS,:SLAKOTH,:WOOBAT]
   pbEachPokemon { |poke,_box|
-    if egg_list.include?(poke.species)
-      egg_list.delete(poke.species)
+    mon = poke.species
+    evo = GameData::Species.get(mon).get_evolutions
+    if egg_list.include?(mon) || egg_list.include?(evo)
+      egg_list.delete(mon)
     end
   }
   return egg_list
@@ -11,9 +13,11 @@ end
 def random_eggs_gym_2
   egg_list = [:HEATMOR,:DUNSPARCE,:PHANTUMP]
   random_eggs_gym_1.push(egg_list)
+  mon = poke.species
+  evo = GameData::Species.get(mon).get_evolutions
   pbEachPokemon { |poke,_box|
-    if egg_list.include?(poke.species)
-      egg_list.delete(poke.species)
+    if egg_list.include?(mon) || egg_list.include?(evo)
+      egg_list.delete(mon)
     end
   }
   return egg_list

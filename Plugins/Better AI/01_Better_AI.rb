@@ -80,6 +80,53 @@ class Battle::AI
 		$targ_moves = []
 	end
 
+	def pbCheckMoveImmunity(score, move, user, target, skill)
+    type = pbRoughType(move, user, skill)
+    typeMod = pbCalcTypeMod(type, user, target)
+    # Type effectiveness
+    return true if (move.damagingMove? && Effectiveness.ineffective?(typeMod)) || score <= 0
+    # Immunity due to ability/item/other effects
+    if skill >= PBTrainerAI.mediumSkill
+      case type
+      when :GROUND
+        return true if target.airborne? && !move.hitsFlyingTargets?
+      when :FIRE
+        return true if target.hasActiveAbility?([:FLASHFIRE, :STEAMENGINE])
+      when :WATER
+        return true if target.hasActiveAbility?([:DRYSKIN, :STORMDRAIN, :WATERABSORB, :IRRIGATION, :STEAMENGINE, :WATERCOMPACTION])
+      when :GRASS
+        return true if target.hasActiveAbility?(:SAPSIPPER)
+      when :ELECTRIC
+        return true if target.hasActiveAbility?([:LIGHTNINGROD, :MOTORDRIVE, :VOLTABSORB])
+			when :ROCK
+				return true if target.hasActiveAbility?(:SCALER)
+			when :ICE
+				return true if target.hasActiveAbility?(:DEFROST)
+      end
+      return true if move.damagingMove? && Effectiveness.not_very_effective?(typeMod) &&
+                     target.hasActiveAbility?(:WONDERGUARD)
+      return true if move.damagingMove? && user.index != target.index && !target.opposes?(user) &&
+                     target.hasActiveAbility?(:TELEPATHY)
+      return true if move.statusMove? && move.canMagicCoat? && target.hasActiveAbility?(:MAGICBOUNCE) &&
+                     target.opposes?(user)
+      return true if move.soundMove? && target.hasActiveAbility?(:SOUNDPROOF)
+      return true if move.bombMove? && target.hasActiveAbility?(:BULLETPROOF)
+      if move.powderMove?
+        return true if target.pbHasType?(:GRASS)
+        return true if target.hasActiveAbility?(:OVERCOAT)
+        return true if target.hasActiveItem?(:SAFETYGOGGLES)
+      end
+      return true if move.statusMove? && target.effects[PBEffects::Substitute] > 0 &&
+                     !move.ignoresSubstitute?(user) && user.index != target.index
+      return true if move.statusMove? && Settings::MECHANICS_GENERATION >= 7 &&
+                     user.hasActiveAbility?(:PRANKSTER) && target.pbHasType?(:DARK) &&
+                     target.opposes?(user)
+      return true if move.priority > 0 && @battle.field.terrain == :Psychic &&
+                     target.affectedByTerrain? && target.opposes?(user)
+    end
+    return false
+  end
+
 	def pbAIRandom(x); return rand(x); end
 
 	def pbStdDev(choices)
@@ -100,58 +147,6 @@ class Battle::AI
 		# Using population standard deviation
 		# [(n-1) makes it a sample std dev, would be 0 with only 1 sample]
 		return Math.sqrt(varianceTimesN/n)
-	end
-
-	#=============================================================================
-	# Decide whether the opponent should Mega Evolve their Pokémon
-	#=============================================================================
-	def pbEnemyShouldMegaEvolve?(idxBattler)
-#		return false if @battle.wildBattle?
-#		battler = @battle.battlers[idxBattler]
-#		$opposing = []
-#    for i in @battle.battlers
-#      if i != battler
-#        if not(i.fainted?)
-#          if i.opposes?
-#            $opposing.push(i)
-#          end
-#        end
-#      end
-#    end
-#		moves = battler.moves
-#		should = (MEGAEVOMETHOD==1)
-#		move   = false
-#		skill = @battle.pbGetOwnerFromBattlerIndex(idxBattler).skill_level
-#		battler.moves do |move|
-#			opposing do |o|
-#				baseDmg = pbMoveBaseDamage(move,battler,o,skill)
-#				if pbRoughDamage(move,battler,o,skill,baseDmg) >= o.hp
-#					move = false
-#					$nextTarget = o
-#					$nextMove = move
-#					$nextQue = 1
-#				end
-#			end
-#		end
-#		for o in $opposing
-#			if isSuperEffective?(battler,o)
-#				move = true
-#			end
-#		end
-#		for o in $opposing
-#			if o.hp <= (o.totalhp/3).floor
-#				should = true
-#			end
-#		end
-#		if move
-#			should = true
-#		end
-		if @battle.pbCanMegaEvolve?(idxBattler)
-			PBDebug.log("[AI] #{battler.pbThis} (#{idxBattler}) will Mega Evolve")
-			return true
-		else
-			return false
-		end
 	end
 
 	#=============================================================================

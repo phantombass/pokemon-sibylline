@@ -1043,7 +1043,7 @@ class Battle::Battler
   end
   def affectedByFumes?
     return false if pbHasType?(:POISON) || pbHasType?(:DARK) || pbHasType?(:PSYCHIC) || pbHasType?(:STEEL)
-    return false if hasActiveAbility?([:OVERCOAT, :IMMUNITY, :OWNTEMPO, :TOXICBOOST, :POISONHEAL, :INNERFOCUS, :COMPOUNDEYES])
+    return false if hasActiveAbility?([:OVERCOAT, :IMMUNITY, :OWNTEMPO, :TOXICBOOST, :POISONHEAL, :INNERFOCUS, :COMPOUNDEYES, :FILTER])
     return false if hasActiveItem?(:SAFETYGOGGLES)
     return true
   end
@@ -1082,7 +1082,7 @@ class Battle::Battler
         Battle::AbilityEffects.triggerOnBeingHit(target.ability, user, target, move, @battle)
         user.pbItemHPHealCheck if user.hp < oldHP
       end
-      if user.effectiveField == :Swamp && move.physicalMove? && move.type != :GROUND
+      if user.effectiveField == :Swamp && move.physicalMove? && move.type != :GROUND && !user.pbHasType?([:POISON,:WATER,:BUG])
         @battle.scene.pbDamageAnimation(user)
         @battle.pbDisplay(_INTL("{1} struggled to move and hurt itself a little.",user.name))
         user.hp -= user.totalhp/8
@@ -1209,7 +1209,7 @@ class Battle
         battler.pbItemStatRestoreCheck
       end
     end
-    if battler.effectiveField == :Swamp && battler.affectedBySwamp?
+    if battler.effectiveField == :Swamp && battler.affectedBySwamp? && !battler.pbHasType?([:WATER,:POISON,:BUG])
       pbDisplay(_INTL("{1} was stuck in the swamp!", battler.pbThis))
       if battler.pbCanLowerStatStage?(:SPEED)
         battler.pbLowerStatStage(:SPEED, 1, nil)
@@ -1374,6 +1374,12 @@ Battle::AbilityEffects::EndOfRoundWeather.add(:DRYSKIN,
       battle.pbDisplay(_INTL("{1} was damaged by the heat!", battler.pbThis))
       battle.pbHideAbilitySplash(battler)
       battler.pbItemHPHealCheck
+    when :Swamp
+      next if !battler.canHeal?
+      battle.pbShowAbilitySplash(battler)
+      battler.pbRecoverHP(battler.totalhp / 8)
+      battle.pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
+      battle.pbHideAbilitySplash(battler)
     end
   }
 )
@@ -1553,7 +1559,7 @@ Battle::AbilityEffects::StatusCure.add(:FAIRYBUBBLE,
     battler.battle.pbShowAbilitySplash(battler)
     battler.pbCureStatus(Battle::Scene::USE_ABILITY_SPLASH)
     if !Battle::Scene::USE_ABILITY_SPLASH
-      battler.battle.pbDisplay(_INTL("{1}'s {2} healed its burn!", battler.pbThis, battler.abilityName))
+      battler.battle.pbDisplay(_INTL("{1}'s {2} healed its status!", battler.pbThis, battler.abilityName))
     end
     battler.battle.pbHideAbilitySplash(battler)
   }
@@ -1576,5 +1582,17 @@ Battle::AbilityEffects::OnSwitchOut.add(:FAIRYBUBBLE,
     next if battler.status == :NONE
     PBDebug.log("[Ability triggered] #{battler.pbThis}'s #{battler.abilityName}")
     battler.status = :NONE
+  }
+)
+
+Battle::AbilityEffects::MoveImmunity.add(:WATERCOMPACTION,
+  proc { |ability, user, target, move, type, battle, show_message|
+    next target.pbMoveImmunityStatRaisingAbility(user, move, type, :WATER, :SPECIAL_DEFENSE, 2, show_message)
+  }
+)
+
+Battle::AbilityEffects::MoveImmunity.add(:STEAMENGINE,
+  proc { |ability, user, target, move, type, battle, show_message|
+    next (target.pbMoveImmunityStatRaisingAbility(user, move, type, :WATER, :SPEED, 6, show_message) || target.pbMoveImmunityStatRaisingAbility(user, move, type, :FIRE, :SPEED, 6, show_message))
   }
 )

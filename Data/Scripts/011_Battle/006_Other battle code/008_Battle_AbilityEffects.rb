@@ -2037,12 +2037,12 @@ Battle::AbilityEffects::OnBeingHit.add(:WANDERINGSPIRIT,
   }
 )
 
-Battle::AbilityEffects::OnBeingHit.add(:WATERCOMPACTION,
-  proc { |ability, user, target, move, battle|
-    next if move.calcType != :WATER
-    target.pbRaiseStatStageByAbility(:DEFENSE, 2, target)
-  }
-)
+#Battle::AbilityEffects::OnBeingHit.add(:WATERCOMPACTION,
+#  proc { |ability, user, target, move, battle|
+#    next if move.calcType != :WATER
+#    target.pbRaiseStatStageByAbility(:DEFENSE, 2, target)
+#  }
+#)
 
 Battle::AbilityEffects::OnBeingHit.add(:WEAKARMOR,
   proc { |ability, user, target, move, battle|

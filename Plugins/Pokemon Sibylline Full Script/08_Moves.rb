@@ -338,10 +338,15 @@ class Battle::Move
       when :ROCK
         multipliers[:final_damage_multiplier] *= 0.8
         @battle.pbDisplay(_INTL("The swamp weakened the attack!"))
-        @battle.pbDisplay(_INTL("The swamp filled with rocks!"))
-        $field_effect_bg = "forest"
-        @battle.scene.pbRefreshEverything
-        @battle.field.field_effects = :None
+        if self.baseDamage >= 80
+          @battle.pbDisplay(_INTL("The swamp filled with rocks!"))
+          $field_effect_bg = "forest"
+          @battle.scene.pbRefreshEverything
+          @battle.field.field_effects = :None
+        end
+      when :FIRE, :FIGHTING
+        multipliers[:final_damage_multiplier] *= 0.8
+        @battle.pbDisplay(_INTL("The swamp weakened the attack!"))
       when :POISON, :WATER, :GRASS
         multipliers[:final_damage_multiplier] *= 1.2
         @battle.pbDisplay(_INTL("The swamp strengthened the attack!"))
@@ -1246,7 +1251,7 @@ class Battle::Move::HealUserHalfOfTotalHPLoseFlyingTypeThisTurn < Battle::Move::
   def pbEffectGeneral(user)
     super
     user.effects[PBEffects::Roost] = true
-    if user.effectiveField == :Swamp
+    if user.effectiveField == :Swamp && !user.pbHasType?([:POISON,:WATER,:BUG])
       @battle.pbDisplay(_INTL("{1} roosted in the swamp and got covered in muck!",user.name))
       user.pbLowerStatStage(:SPEED,1,user) if user.pbCanLowerStatStage?(:SPEED)
     end
@@ -1412,6 +1417,14 @@ class Battle::Move::SuperEffectiveAgainstElectric < Battle::Move
   end
 end
 
+#Ancient Cry
+class Battle::Move::EffectiveAgainstFairy < Battle::Move
+  def pbCalcTypeModSingle(moveType,defType,user,target)
+    return Effectiveness::NORMAL_EFFECTIVE_ONE if defType == :FAIRY
+    return super
+  end
+end
+
 #Grassy Glide to boost priority in Garden field
 class Battle::Move::HigherPriorityInGrassyTerrain < Battle::Move
   def pbPriority(user)
@@ -1447,6 +1460,8 @@ class Battle::Move::UseMoveDependingOnEnvironment < Battle::Move
         @npMove = :OVERDRIVE if GameData::Move.exists?(:OVERDRIVE)
       when :Ruins
         @npMove = :ANCIENTPOWER if GameData::Move.exists?(:ANCIENTPOWER)
+      when :Swamp
+        @npMove = :MUDDYWATER if GameData::Move.exists?(:MUDDYWATER)
       else
         try_move = nil
         case @battle.environment

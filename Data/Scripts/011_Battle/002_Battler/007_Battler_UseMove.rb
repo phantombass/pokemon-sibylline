@@ -740,14 +740,14 @@ class Battle::Battler
     end
     # Steam Engine (goes here because it should be after stat changes caused by
     # the move)
-    if [:FIRE, :WATER].include?(move.calcType)
-      targets.each do |b|
-        next if b.damageState.unaffected
-        next if b.damageState.calcDamage == 0 || b.damageState.substitute
-        next if !b.hasActiveAbility?(:STEAMENGINE)
-        b.pbRaiseStatStageByAbility(:SPEED, 6, b) if b.pbCanRaiseStatStage?(:SPEED, b)
-      end
-    end
+#    if [:FIRE, :WATER].include?(move.calcType)
+#      targets.each do |b|
+#        next if b.damageState.unaffected
+#        next if b.damageState.calcDamage == 0 || b.damageState.substitute
+#        next if !b.hasActiveAbility?(:STEAMENGINE)
+#        b.pbRaiseStatStageByAbility(:SPEED, 6, b) if b.pbCanRaiseStatStage?(:SPEED, b)
+#      end
+#    end
     # Fainting
     targets.each { |b| b.pbFaint if b&.fainted? }
     user.pbFaint if user.fainted?

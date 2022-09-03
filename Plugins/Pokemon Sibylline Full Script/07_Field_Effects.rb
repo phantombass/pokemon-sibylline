@@ -502,6 +502,11 @@ class Battle
       battler.pbRecoverHP(battler.totalhp / 16)
       pbDisplay(_INTL("{1}'s HP was restored by the Garden.", battler.pbThis))
     end
+    if @field.field_effects == :Swamp && battler.affectedBySwamp? && battler.canHeal? && battler.pbHasType?([:POISON,:WATER,:GRASS])
+      PBDebug.log("[Lingering effect] Swamp field heals #{battler.pbThis(true)}")
+      battler.pbRecoverHP(battler.totalhp / 16)
+      pbDisplay(_INTL("{1}'s HP was restored by the Swamp.", battler.pbThis))
+    end
   end
   def defaultField=(value)
     @field.defaultField  = value

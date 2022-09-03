@@ -234,7 +234,7 @@ Battle::ItemEffects::OnSwitchIn.add(:SHADOWGUARDORB,
 
 Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
   proc { |item, battler, battle|
-    next false if (battle.field.terrain != :Grassy || battle.field.field_effects == :Garden)
+    next false if (battle.field.terrain != :Grassy || battle.field.field_effects != :Garden)
     next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
     itemName = GameData::Item.get(item).name
     battle.pbCommonAnimation("UseItem", battler)

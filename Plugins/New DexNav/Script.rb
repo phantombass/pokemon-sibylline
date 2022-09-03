@@ -418,6 +418,7 @@ class NewDexNav
       maps = GameData::MapMetadata.try_get($game_map.map_id)   # Map IDs for Zharonian Forme
       form = 0
       form = form
+      $form_hunt = GameData::Species.get($currentDexSearch[0]).form
       itemRand = rand(3)
       navRand = rand(3)
       $game_variables[400] = navRand
@@ -634,14 +635,19 @@ EventHandlers.add(:on_wild_pokemon_created, :dexnav_chain,
         end
         $chain = $chainNav[1]
         lvl = rand(100)
-        if lvl > 80
-          pokemon.level = pokemon.level + 10
+        lvl = rand(100)
+        if lvl > 90
+          pokemon.level = pokemon.level + rand(100-lvl)
+          if pokemon.level > LEVEL_CAP[$game_system.level_cap] && $PokemonSystem.level_caps == 0
+            $game_switches[89] = true
+          end
         else
           pokemon.level = pokemon.level
         end
         itemNav = $game_variables[401]
         pokemon.name=GameData::Species.get(pokemon.species).name
         pokemon.item = itemNav[0]
+        pokemon.form = $form_hunt
         pokemon.ability_index = $game_variables[NavNums::Ability]
         maps = GameData::MapMetadata.try_get($game_map.map_id)
         if $chain >= 0

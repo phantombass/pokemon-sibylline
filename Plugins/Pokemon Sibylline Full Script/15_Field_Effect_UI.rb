@@ -123,11 +123,32 @@ MenuHandlers.add(:field_effect_data, :garden, {
   "effect"    => proc { |menu|
     pbPlayDecisionSE
     pbMessage(_INTL("+ Bug, Grass, Fairy"))
-    pbMessage(_INTL("Fire moves cause Wildfire."))
+    pbMessage(_INTL("Fire moves cause Wildfire unless in the Rain."))
     pbMessage(_INTL("Flying moves scatter random spores."))
     pbMessage(_INTL("Bugs get boosted defenses."))
     pbMessage(_INTL("Sap Sipper, Flower Veil, Leaf Guard and Grass Pelt activate."))
     pbMessage(_INTL("Bug, Grass, and Fairy recover HP every turn."))
+    next false
+  }
+}
+)
+
+MenuHandlers.add(:field_effect_data, :swamp, {
+  "name"      => _INTL("Swamp"),
+  "order"     => 2,
+  "condition" => proc { next $game_switches[502] },
+  "effect"    => proc { |menu|
+    pbPlayDecisionSE
+    pbMessage(_INTL("+ Poison, Water, Grass"))
+    pbMessage(_INTL("- Fire, Rock, Fighting"))
+    pbMessage(_INTL("Lowers Speed of all grounded non-Poison, Water or Bug types."))
+    pbMessage(_INTL("Poison and Water moves have perfect Accuracy."))
+    pbMessage(_INTL("Base 80 or stronger Rock moves remove the field."))
+    pbMessage(_INTL("Roosting lowers Speed of non-Poison, Water or Bug types."))
+    pbMessage(_INTL("Using physical moves that are not Ground-type incur damage to the user. Not applicable to Poison, Water or Bug types."))
+    pbMessage(_INTL("Ground-type moves cause flinching."))
+    pbMessage(_INTL("Leaf Guard and Dry Skin activate."))
+    pbMessage(_INTL("Water and Poison recover HP every turn."))
     next false
   }
 }

@@ -570,13 +570,24 @@ MenuHandlers.add(:min_grinding_options, :set_level, {
       $viewport_min.dispose
       next false
     end
-    level = pbMessageChooseNumber(
-      _INTL("Set the Pokémon's level (Level Cap is {1}).", params.maxNumber), params
-    ) { screen.pbUpdate }
-    if level != pkmn.level
-      pkmn.level = level
+    pbMessage(_INTL("How would you like to Level Up?\\ch[34,5,To Level Cap,Change Level...,Cancel]"))
+    lvl = $game_variables[34]
+    if lvl == -1 || lvl == 2 || lvl == 3
+      pbPlayCloseMenuSE
+      dorefresh = true
+    end
+    case lvl
+    when 0
+      pkmn.level = LEVEL_CAP[$game_system.level_cap]
       pkmn.calc_stats
-      screen.pbRefreshSingle(party_idx)
+      dorefresh = true
+    when 1
+      level = pbMessageChooseNumber(_INTL("Set the Pokémon's level (Level Cap is {1}).", params.maxNumber), params) { screen.pbUpdate }
+      if level != pkmn.level
+        pkmn.level = level
+        pkmn.calc_stats
+        screen.pbRefreshSingle(party_idx)
+      end
     end
     $viewport_min.dispose
     next false

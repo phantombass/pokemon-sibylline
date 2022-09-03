@@ -1,5 +1,5 @@
 ﻿Name       = v20.1 Hotfixes
-Version    = 1.0.2
+Version    = 1.0.3
 Essentials = 20.1
 Conflicts  = v19 Hotfixes
 Conflicts  = v19.1 Updates
@@ -43,5 +43,13 @@ Credits    = Maruno
 #   their backs to the other map.
 # - Fixed error when getting terrain tag when the player moves
 #   between connected maps.
+#
+# 1.0.3:
+#
+# - Fixed Eerie Spell's effect working like a status move.
+# - Fixed play time carrying over to new games.
+# - Fixed being unable to set the player's movement speed during a
+#   move route.
+# - Fixed crash when ending a Bug Catching Contest.
 #
 #====================================================================

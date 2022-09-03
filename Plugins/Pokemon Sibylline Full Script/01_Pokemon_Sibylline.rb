@@ -1,7 +1,7 @@
 #New Level Cap System
 module Settings
   #UPDATE THIS WITH EVERY PUSH!!!!!!!!!!!!!!
-  GAME_VERSION = "0.3.14"
+  GAME_VERSION = "0.3.15"
   #==================================#
 
   LEVEL_CAP_SWITCH = true

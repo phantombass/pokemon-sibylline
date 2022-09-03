@@ -8735,6 +8735,8 @@ Target = User
 FunctionCode = RaiseUserDefense1
 Description = The user withdraws its body into its hard shell, raising its Defense stat.
 #-------------------------------
+# Sibylline Exclusive Moves
+#-------------------------------
 [SPECTRALSHRIEK]
 Name = Spectral Shriek
 Type = GHOST
@@ -8868,6 +8870,30 @@ Accuracy = 95
 TotalPP = 15
 Target = NearOther
 FunctionCode = RemoveScreens
-Flags = Contact,CanProtect,CanMirrorMove
+Flags = CanProtect,CanMirrorMove
 Description = The user attacks with sharp gust of wind. It can also break any barrier such as Light Screen and Reflect.
+#-------------------------------
+[BOUNCYBUBBLE]
+Name = Bouncy Bubble
+Type = WATER
+Category = Special
+Power = 90
+Accuracy = 100
+TotalPP = 10
+Target = Other
+FunctionCode = HealUserByThreeQuartersOfDamageDone
+Flags = CanProtect,CanMirrorMove
+Description = The user absorbs its target's HP. The user's HP is restored by over half of the damage dealt.
+#-------------------------------
+[ANCIENTCRY]
+Name = Ancient Cry
+Type = DRAGON
+Category = Special
+Power = 100
+Accuracy = 100
+TotalPP = 10
+Target = AllNearFoes
+FunctionCode = EffectiveAgainstFairy
+Flags = CanProtect,CanMirrorMove,Sound
+Description = The user lets out a cry learned from the ancient past, which even damages Fairies.
 #-------------------------------

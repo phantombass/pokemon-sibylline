@@ -6,7 +6,7 @@
 # https://github.com/Maruno17/pokemon-essentials
 #===============================================================================
 
-Essentials::ERROR_TEXT += "[v20.1 Hotfixes 1.0.2]\r\n"
+Essentials::ERROR_TEXT += "[v20.1 Hotfixes 1.0.3]\r\n"
 
 #===============================================================================
 # Fixed the "See ya!" option in the PC menu not working properly.
@@ -94,57 +94,6 @@ class PokemonBoxSprite < Sprite
       end
     end
   end
-end
-
-#===============================================================================
-# Fixed playing the credits/changing $scene leaving a ghost image of the old map
-# behind.
-#===============================================================================
-class Scene_Map
-  def dispose
-    disposeSpritesets
-    @map_renderer.dispose
-    @map_renderer = nil
-    @spritesetGlobal.dispose
-    @spritesetGlobal = nil
-  end
-
-  def main
-    createSpritesets
-    Graphics.transition
-    loop do
-      Graphics.update
-      Input.update
-      update
-      break if $scene != self
-    end
-    Graphics.freeze
-    dispose
-    if $game_temp.title_screen_calling
-      Graphics.transition
-      Graphics.freeze
-    end
-  end
-end
-
-def pbLoadRpgxpScene(scene)
-  return if !$scene.is_a?(Scene_Map)
-  oldscene = $scene
-  $scene = scene
-  Graphics.freeze
-  oldscene.dispose
-  visibleObjects = pbHideVisibleObjects
-  Graphics.transition
-  Graphics.freeze
-  while $scene && !$scene.is_a?(Scene_Map)
-    $scene.main
-  end
-  Graphics.transition
-  Graphics.freeze
-  $scene = oldscene
-  $scene.createSpritesets
-  pbShowObjects(visibleObjects)
-  Graphics.transition
 end
 
 #===============================================================================
@@ -308,40 +257,44 @@ SpecialBattleIntroAnimations.get("alternate_vs_trainer_animation")[2] = proc { |
   }
 
 #===============================================================================
-# Fixed SystemStackError when two events on connected maps have their backs to
-# the other map.
+# Fixed play time carrying over to new games.
 #===============================================================================
-class Game_Character
-  def calculate_bush_depth
-    if @tile_id > 0 || @always_on_top || jumping?
-      @bush_depth = 0
-      return
+module SaveData
+  class Value
+    def reset_on_new_game
+      @reset_on_new_game = true
     end
-    this_map = (self.map.valid?(@x, @y)) ? [self.map, @x, @y] : $map_factory&.getNewMap(@x, @y, self.map.map_id)
-    if this_map && this_map[0].deepBush?(this_map[1], this_map[2])
-      xbehind = @x + (@direction == 4 ? 1 : @direction == 6 ? -1 : 0)
-      ybehind = @y + (@direction == 8 ? 1 : @direction == 2 ? -1 : 0)
-      if moving?
-        behind_map = (self.map.valid?(xbehind, ybehind)) ? [self.map, xbehind, ybehind] : $map_factory&.getNewMap(xbehind, ybehind, self.map.map_id)
-        @bush_depth = Game_Map::TILE_HEIGHT if behind_map[0].deepBush?(behind_map[1], behind_map[2])
-      else
-        @bush_depth = Game_Map::TILE_HEIGHT
-      end
-    elsif this_map && this_map[0].bush?(this_map[1], this_map[2]) && !moving?
-      @bush_depth = 12
-    else
-      @bush_depth = 0
+
+    def reset_on_new_game?
+      return @reset_on_new_game
+    end
+  end
+
+  def self.unregister(id)
+    validate id => Symbol
+    @values.delete_if { |value| value.id == id }
+  end
+
+  def self.mark_values_as_unloaded
+    @values.each do |value|
+      value.mark_as_unloaded if !value.load_in_bootup? || value.reset_on_new_game?
+    end
+  end
+
+  def self.load_new_game_values
+    @values.each do |value|
+      value.load_new_game_value if value.has_new_game_proc? && (!value.loaded? || value.reset_on_new_game?)
     end
   end
 end
 
-#===============================================================================
-# Fixed error when getting terrain tag when the player moves between connected
-# maps.
-#===============================================================================
-class Game_Player < Game_Character
-  def pbTerrainTag(countBridge = false)
-    return $map_factory.getTerrainTagFromCoords(self.map.map_id, @x, @y, countBridge) if $map_factory
-    return $game_map.terrain_tag(@x, @y, countBridge)
-  end
+SaveData.unregister(:stats)
+
+SaveData.register(:stats) do
+  load_in_bootup
+  ensure_class :GameStats
+  save_value { $stats }
+  load_value { |value| $stats = value }
+  new_game_value { GameStats.new }
+  reset_on_new_game
 end

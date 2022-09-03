@@ -1,3 +1,6 @@
+#-------------------------------------------------------------------------------
+# Extensions to the species metrics to allow for custom sprite scaling
+#-------------------------------------------------------------------------------
 module GameData
   class SpeciesMetrics
 
@@ -52,10 +55,14 @@ module GameData
   end
 end
 
-
+#-------------------------------------------------------------------------------
+# Extensions to the compiler species metrics to allow for custom sprite scales
+#-------------------------------------------------------------------------------
 module Compiler
   module_function
-
+  #-----------------------------------------------------------------------------
+  # Make sure the sprite scales are written in the PBS
+  #-----------------------------------------------------------------------------
   def write_pokemon_metrics(path = "PBS/pokemon_metrics.txt")
     write_pbs_file_message_start(path)
     # Get in species order then in form order
@@ -106,7 +113,9 @@ module Compiler
     }
     process_pbs_file_message_end
   end
-
+  #-----------------------------------------------------------------------------
+  # Make sure the sprite scales are written in the PBS
+  #-----------------------------------------------------------------------------
   def compile_pokemon_metrics(path = "PBS/pokemon_metrics.txt")
     return if !safeExists?(path)
     compile_pbs_file_message_start(path)
@@ -165,5 +174,21 @@ module Compiler
     GameData::SpeciesMetrics.save
     process_pbs_file_message_end
   end
+end
 
+#-------------------------------------------------------------------------------
+# Make sure the pokemon sprite scales are properly compiled
+#-------------------------------------------------------------------------------
+module GameData
+  class << self
+    alias __gen8__load_all load_all unless method_defined?(:__gen8__load_all)
+  end
+
+  def self.load_all(*args)
+    __gen8__load_all(*args)
+    return if !$DEBUG
+    key = GameData::SpeciesMetrics::DATA.keys.first
+    Compiler.compile_pokemon_metrics if GameData::SpeciesMetrics.get(key).front_sprite_scale.nil?
+    SpeciesMetrics.load
+  end
 end

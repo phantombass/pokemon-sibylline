@@ -38,12 +38,10 @@ if !defined?(EliteBattle)
           ret = self.front_sprite_bitmap(species, pkmn.form, pkmn.gender, pkmn.shiny?, pkmn.shadowPokemon?)
         end
         alter_bitmap_function = nil
-        alter_bitmap_function = MultipleForms.getFunction(species, "alterBitmap") if ret && ret.totalFrames == 1
+        alter_bitmap_function = MultipleForms.getFunction(species, "alterBitmap") if ret && ret.total_frames == 1
         return ret if !alter_bitmap_function
         ret.prepare_strip
-        for i in 0...ret.totalFrames
-          alter_bitmap_function.call(pkmn, ret.alter_bitmap(i))
-        end
+        ret.total_frames.times { |i| alter_bitmap_function.call(pkmn, ret.alter_bitmap(i)) }
         ret.compile_strip
         return ret
       end
@@ -53,7 +51,7 @@ if !defined?(EliteBattle)
   #-----------------------------------------------------------------------------
   #  Adding Box constraints to the Pokemon Sprite Bitmap
   #-----------------------------------------------------------------------------
-  class PokemonSprite < SpriteWrapper
+  class PokemonSprite
     def constrict(amt, deanimate = false)
       if amt.is_a?(Array)
         @_iconbitmap.constrict_x = amt[0] if @_iconbitmap.respond_to?(:constrict_x)
@@ -64,6 +62,7 @@ if !defined?(EliteBattle)
       end
       @_iconbitmap.setSpeed(0) if @_iconbitmap.respond_to?(:setSpeed) && deanimate
       @_iconbitmap.deanimate if @_iconbitmap.respond_to?(:deanimate) && deanimate
+      self.update
     end
   end
 

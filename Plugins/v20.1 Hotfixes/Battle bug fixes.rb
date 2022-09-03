@@ -150,3 +150,18 @@ class Battle::Move::HigherPriorityInGrassyTerrain < Battle::Move
     return ret
   end
 end
+
+#===============================================================================
+# Fixed Eerie Spell's effect working like a status move.
+#===============================================================================
+class Battle::Move::LowerPPOfTargetLastMoveBy3 < Battle::Move
+  def pbEffectAgainstTarget(user, target)
+    return if target.fainted?
+    last_move = target.pbGetMoveWithID(target.lastRegularMoveUsed)
+    return if !last_move || last_move.pp == 0 || last_move.total_pp <= 0
+    reduction = [3, last_move.pp].min
+    target.pbSetPP(last_move, last_move.pp - reduction)
+    @battle.pbDisplay(_INTL("It reduced the PP of {1}'s {2} by {3}!",
+                            target.pbThis(true), last_move.name, reduction))
+  end
+end

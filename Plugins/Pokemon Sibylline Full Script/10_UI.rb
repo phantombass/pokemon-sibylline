@@ -563,14 +563,15 @@ MenuHandlers.add(:min_grinding_options, :set_level, {
   "effect" => proc { |screen, party, party_idx|
     pkmn = party[party_idx]
     params = ChooseNumberParams.new
-    params.setRange(1, LEVEL_CAP[$game_system.level_cap])
+    level_cap = $PokemonSystem.difficulty < 3 ? LEVEL_CAP[$game_system.level_cap] : LEVEL_CAP_INSANE[$game_system.level_cap]
+    params.setRange(1, level_cap)
     params.setDefaultValue(pkmn.level)
     if pkmn.fainted? && $PokemonSystem.nuzlocke == 1
       screen.pbDisplay(_INTL("This Pokémon can no longer be used in the Nuzlocke."))
       $viewport_min.dispose
       next false
     end
-    pbMessage(_INTL("How would you like to Level Up?\\ch[34,5,To Level Cap,Change Level...,Cancel]"))
+    pbMessage(_INTL("How would you like to Level Up?\\ch[34,3,To Level Cap,Change Level...,Cancel]"))
     lvl = $game_variables[34]
     if lvl == -1 || lvl == 2 || lvl == 3
       pbPlayCloseMenuSE
@@ -578,7 +579,7 @@ MenuHandlers.add(:min_grinding_options, :set_level, {
     end
     case lvl
     when 0
-      pkmn.level = LEVEL_CAP[$game_system.level_cap]
+      pkmn.level = level_cap
       pkmn.calc_stats
       dorefresh = true
     when 1
@@ -637,8 +638,20 @@ MenuHandlers.add(:min_grinding_options, :evs_ivs, {
             params.setRange(0, upperLimit)
             params.setDefaultValue(thisValue)
             params.setCancelValue(thisValue)
-            f = pbMessageChooseNumber(_INTL("Set the EV for {1} (max. {2}).",
-                                            GameData::Stat.get(ev_id[cmd2]).name, upperLimit), params) { screen.pbUpdate }
+            pbMessage(_INTL("How would you like to change EVs?\\ch[34,4,Max EVs,Clear EVs,Edit EVs...,Cancel]"))
+            lvl = $game_variables[34]
+            if lvl == -1 || lvl == 3 || lvl == 4
+              pbPlayCloseMenuSE
+              dorefresh = true
+            end
+            if lvl == 0
+              f = upperLimit
+            elsif lvl == 1
+              f = 0
+            elsif
+              f = pbMessageChooseNumber(_INTL("Set the EV for {1} (max. {2}).", GameData::Stat.get(ev_id[cmd2]).name, upperLimit), params) { screen.pbUpdate }
+            end
+
             if f != pkmn.ev[ev_id[cmd2]]
               pkmn.ev[ev_id[cmd2]] = f
               pkmn.calc_stats
@@ -670,8 +683,19 @@ MenuHandlers.add(:min_grinding_options, :evs_ivs, {
             params.setRange(0, Pokemon::IV_STAT_LIMIT)
             params.setDefaultValue(pkmn.iv[iv_id[cmd2]])
             params.setCancelValue(pkmn.iv[iv_id[cmd2]])
-            f = pbMessageChooseNumber(_INTL("Set the IV for {1} (max. 31).",
-                                            GameData::Stat.get(iv_id[cmd2]).name), params) { screen.pbUpdate }
+            pbMessage(_INTL("How would you like to change IVs?\\ch[34,4,Max IVs,Min IVs,Edit IVs...,Cancel]"))
+            lvl = $game_variables[34]
+            if lvl == -1 || lvl == 3 || lvl == 4
+              pbPlayCloseMenuSE
+              dorefresh = true
+            end
+            if lvl == 0
+              f = 31
+            elsif lvl == 1
+              f = 0
+            elsif
+              f = pbMessageChooseNumber(_INTL("Set the IV for {1} (max. 31).", GameData::Stat.get(iv_id[cmd2]).name), params) { screen.pbUpdate }
+            end
             if f != pkmn.iv[iv_id[cmd2]]
               pkmn.iv[iv_id[cmd2]] = f
               pkmn.calc_stats

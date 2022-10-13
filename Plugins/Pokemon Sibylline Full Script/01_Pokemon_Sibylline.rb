@@ -1,7 +1,7 @@
 #New Level Cap System
 module Settings
   #UPDATE THIS WITH EVERY PUSH!!!!!!!!!!!!!!
-  GAME_VERSION = "0.3.15"
+  GAME_VERSION = "0.4.0"
   #==================================#
 
   LEVEL_CAP_SWITCH = true
@@ -37,6 +37,14 @@ class PokemonSystem
     @min_grinding = 0 #Minimal Grinding set to Off by default
   end
 end
+
+EventHandlers.add(:on_frame_update, :insane_mode,
+  proc {
+    if $PokemonSystem.difficulty == 3 && $game_switches[102] == false
+      $game_switches[102] = true
+    end
+  }
+)
 
 MenuHandlers.add(:pause_menu, :box_link, {
   "name"      => _INTL("PC Box Link"),
@@ -108,6 +116,14 @@ MenuHandlers.add(:options_menu, :min_grinding, {
   "set_proc"    => proc { |value, _sceme| $PokemonSystem.min_grinding = value }
 })
 
+class Player < Trainer
+  class Pokedex
+    def set_all_seen
+      GameData::Species.each { |s| set_seen(s) }
+    end
+  end
+end
+
 class Game_System
   attr_accessor :level_cap
   alias initialize_cap initialize
@@ -121,11 +137,16 @@ class Game_System
 end
 
 LEVEL_CAP = [8,12,14,17]
+LEVEL_CAP_INSANE = [8,13,16,19]
 
 module Game
   def self.level_cap_update
     $game_system.level_cap += 1
-    $game_system.level_cap = LEVEL_CAP.size-1 if $game_system.level_cap >= LEVEL_CAP.size
+    if $PokemonSystem.difficulty == 3
+      $game_system.level_cap = LEVEL_CAP_INSANE.size-1 if $game_system.level_cap >= LEVEL_CAP_INSANE.size
+    else
+      $game_system.level_cap = LEVEL_CAP.size-1 if $game_system.level_cap >= LEVEL_CAP.size
+    end
   end
   def self.start_new
     if $game_map&.events
@@ -184,7 +205,11 @@ class Battle
     isPartic    = defeatedBattler.participants.include?(idxParty)
     hasExpShare = expShare.include?(idxParty)
     level = defeatedBattler.level
-    level_cap = $PokemonSystem.level_caps == 0 ? LEVEL_CAP[$game_system.level_cap] : Settings::MAXIMUM_LEVEL
+    if $PokemonSystem.difficulty == 3
+      level_cap = $PokemonSystem.level_caps == 0 ? LEVEL_CAP_INSANE[$game_system.level_cap] : Settings::MAXIMUM_LEVEL
+    else
+      level_cap = $PokemonSystem.level_caps == 0 ? LEVEL_CAP[$game_system.level_cap] : Settings::MAXIMUM_LEVEL
+    end
     level_cap_gap = growth_rate.exp_values[level_cap] - pkmn.exp
     # Main Exp calculation
     exp = 0
@@ -328,6 +353,7 @@ class PokemonPauseMenu_Scene
   def pbStartScene
     if $game_switches[NavNums::Dispose] == false
       $RepelToggle = false
+      cap = $PokemonSystem.difficulty == 3 ? LEVEL_CAP_INSANE[$game_system.level_cap] : LEVEL_CAP[$game_system.level_cap]
       @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
       @viewport.z = 99999
       @sprites = {}
@@ -338,7 +364,7 @@ class PokemonPauseMenu_Scene
       @sprites["infowindow"].visible = false
       @sprites["helpwindow"] = Window_UnformattedTextPokemon.newWithSize("", 0, 0, 32, 32, @viewport)
       @sprites["helpwindow"].visible = false
-      @sprites["levelcapwindow"] = Window_UnformattedTextPokemon.newWithSize("Level Cap: #{LEVEL_CAP[$game_system.level_cap]}",0,64,208,64,@viewport)
+      @sprites["levelcapwindow"] = Window_UnformattedTextPokemon.newWithSize("Level Cap: #{cap}",0,64,208,64,@viewport)
       @sprites["levelcapwindow"].visible = false
       @infostate = false
       @helpstate = false
@@ -606,11 +632,12 @@ class Battle::Battler
     return true if choice[0] != :UseMove
     return true if !@battle.internalBattle
     return true if !@battle.pbOwnedByPlayer?(@index)
+    level_cap = $PokemonSystem.difficulty == 3 ? LEVEL_CAP_INSANE[$game_system.level_cap] : LEVEL_CAP[$game_system.level_cap]
     disobedient = false
     # Pokémon may be disobedient; calculate if it is
     badge_level = 10 * (@battle.pbPlayer.badge_count + 1)
     badge_level = GameData::GrowthRate.max_level if @battle.pbPlayer.badge_count >= 8
-    badge_level = LEVEL_CAP[$game_system.level_cap] if @battle.pbPlayer.badge_count >= 8 && $PokemonSystem.level_caps == 0
+    badge_level = level_cap if $PokemonSystem.level_caps == 0
     if Settings::ANY_HIGH_LEVEL_POKEMON_CAN_DISOBEY ||
        (Settings::FOREIGN_HIGH_LEVEL_POKEMON_CAN_DISOBEY && @pokemon.foreign?(@battle.pbPlayer))
       if @level > badge_level

@@ -92,6 +92,74 @@ GameData::Habitat.register({
 
 
 #-------------------------------------------------------------------------------
+# Allows for different colored text in the party menu.
+#-------------------------------------------------------------------------------
+class Window_CommandPokemonColor < Window_CommandPokemon
+  def drawItem(index, _count, rect)
+    pbSetSystemFont(self.contents) if @starting
+    rect = drawCursor(index, rect)
+    base   = self.baseColor
+    shadow = self.shadowColor
+    #---------------------------------------------------------------------------
+    # Blue text.
+    #---------------------------------------------------------------------------
+    if @colorKey[index] && @colorKey[index] == 1
+      base   = Color.new(0, 80, 160)
+      shadow = Color.new(128, 192, 240)
+    end
+    #---------------------------------------------------------------------------
+    # Red text.
+    #---------------------------------------------------------------------------
+    if @colorKey[index] && @colorKey[index] == 2
+      base   = Color.new(188, 65, 65)
+      shadow = Color.new(240, 108, 108)
+    end
+    #---------------------------------------------------------------------------
+    # Purple text.
+    #---------------------------------------------------------------------------
+    if @colorKey[index] && @colorKey[index] == 3
+      base   = Color.new(149, 33, 246)
+      shadow = Color.new(261, 161, 326)
+    end
+    #---------------------------------------------------------------------------
+    # Gray text.
+    #---------------------------------------------------------------------------
+    if @colorKey[index] && @colorKey[index] == 4
+      base   = Color.new(184, 184, 184)
+      shadow = Color.new(96, 96, 96)
+    end
+    pbDrawShadowText(self.contents, rect.x, rect.y + (self.contents.text_offset_y || 0),
+                     rect.width, rect.height, @commands[index], base, shadow)
+  end
+end
+
+
+#-------------------------------------------------------------------------------
+# Gets all eligible moves that a species's entire evolutionary line can learn.
+#-------------------------------------------------------------------------------
+module GameData
+  class Species
+    def get_family_moves
+      moves = []
+      baby = GameData::Species.get_species_form(get_baby_species, @form)
+      prev = GameData::Species.get_species_form(get_previous_species, @form)
+      if baby.species != @species
+        baby.moves.each { |m| moves.push(m[1]) }
+      end
+      if prev.species != @species && prev.species != baby.species
+        prev.moves.each { |m| moves.push(m[1]) }
+      end
+      @moves.each { |m| moves.push(m[1]) }
+      @tutor_moves.each { |m| moves.push(m) }
+      get_egg_moves.each { |m| moves.push(m) }
+      moves |= []
+      return moves
+    end
+  end
+end
+
+
+#-------------------------------------------------------------------------------
 # Rewrites Pokemon Storage to show displays added by plugins.
 #-------------------------------------------------------------------------------
 class PokemonStorageScene

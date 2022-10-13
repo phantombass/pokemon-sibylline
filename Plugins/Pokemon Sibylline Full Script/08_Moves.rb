@@ -273,43 +273,43 @@ class Battle::Move
       case type
       when :FIRE, :GROUND
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The desert strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The desert strengthened the attack!")) if $test_trigger == false
       when :WATER, :GRASS
         multipliers[:final_damage_multiplier] *= 0.8
-        @battle.pbDisplay(_INTL("The desert weakened the attack!"))
+        @battle.pbDisplay(_INTL("The desert weakened the attack!")) if $test_trigger == false
       when :FLYING
         if user.effectiveWeather != :Sandstorm
           @battle.field.weather = :Sandstorm
           @battle.field.weatherDuration = user.hasActiveItem?(:SMOOTHROCK) ? 8 : 5
-          @battle.pbDisplay(_INTL("The winds kicked up a Sandstorm!"))
+          @battle.pbDisplay(_INTL("The winds kicked up a Sandstorm!")) if $test_trigger == false
         end
       end
     when :Lava
       case type
       when :FIRE
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The lava strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The lava strengthened the attack!")) if $test_trigger == false
       end
     when :ToxicFumes
       case type
       when :FIRE
         multipliers[:final_damage_multiplier] *= 1.2
         if user.effectiveWeather == :Rain
-          @battle.pbDisplay(_INTL("The fumes strengthened the attack!"))
+          @battle.pbDisplay(_INTL("The fumes strengthened the attack!")) if $test_trigger == false
         else
-          @battle.pbDisplay(_INTL("The fumes strengthened the attack!"))
-          @battle.pbDisplay(_INTL("The field caught fire!"))
+          @battle.pbDisplay(_INTL("The fumes strengthened the attack!")) if $test_trigger == false
+          @battle.pbDisplay(_INTL("The field caught fire!")) if $test_trigger == false
           $field_effect_bg = "fire"
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :Fire
-          @battle.pbDisplay(_INTL("The field is ablaze."))
+          @battle.pbDisplay(_INTL("The field is ablaze.")) if $test_trigger == false
         end
       when :POISON
         multipliers[:final_damage_multiplier] *= 1.2
         if $orig_water == false
-          @battle.pbDisplay(_INTL("The fumes strengthened the attack!"))
+          @battle.pbDisplay(_INTL("The fumes strengthened the attack!")) if $test_trigger == false
         else
-          @battle.pbDisplay(_INTL("The fumes corroded and strengthened the attack!"))
+          @battle.pbDisplay(_INTL("The fumes corroded and strengthened the attack!")) if $test_trigger == false
         end
         $orig_water = false
       end
@@ -318,12 +318,12 @@ class Battle::Move
       when :FIRE
         multipliers[:final_damage_multiplier] *= 1.2
         if $orig_grass == false && $orig_flying == false
-          @battle.pbDisplay(_INTL("The wildfire strengthened the attack!"))
+          @battle.pbDisplay(_INTL("The wildfire strengthened the attack!")) if $test_trigger == false
         elsif $orig_grass == true
-          @battle.pbDisplay(_INTL("The plants caught fire and strengthened the attack!"))
+          @battle.pbDisplay(_INTL("The plants caught fire and strengthened the attack!")) if $test_trigger == false
           $orig_grass = false
         elsif $orig_flying == true
-          @battle.pbDisplay(_INTL("The winds kicked up cinders!"))
+          @battle.pbDisplay(_INTL("The winds kicked up cinders!")) if $test_trigger == false
           if $cinders == 0
             $cinders = 3
           end
@@ -331,42 +331,42 @@ class Battle::Move
         end
       when :WATER
         multipliers[:final_damage_multiplier] *= 0.8
-        @battle.pbDisplay(_INTL("The wildfire weakened the attack!"))
+        @battle.pbDisplay(_INTL("The wildfire weakened the attack!")) if $test_trigger == false
       end
     when :Swamp
       case type
       when :ROCK
         multipliers[:final_damage_multiplier] *= 0.8
-        @battle.pbDisplay(_INTL("The swamp weakened the attack!"))
+        @battle.pbDisplay(_INTL("The swamp weakened the attack!")) if $test_trigger == false
         if self.baseDamage >= 80
-          @battle.pbDisplay(_INTL("The swamp filled with rocks!"))
+          @battle.pbDisplay(_INTL("The swamp filled with rocks!")) if $test_trigger == false
           $field_effect_bg = "forest"
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :None
         end
       when :FIRE, :FIGHTING
         multipliers[:final_damage_multiplier] *= 0.8
-        @battle.pbDisplay(_INTL("The swamp weakened the attack!"))
+        @battle.pbDisplay(_INTL("The swamp weakened the attack!")) if $test_trigger == false
       when :POISON, :WATER, :GRASS
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The swamp strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The swamp strengthened the attack!")) if $test_trigger == false
       end
     when :City
       case type
       when :NORMAL, :POISON
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The city strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The city strengthened the attack!")) if $test_trigger == false
       when :FIRE
         if self.baseDamage >= 70 && specialMove? && user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
-          @battle.pbDisplay(_INTL("The city caught fire!"))
+          @battle.pbDisplay(_INTL("The city caught fire!")) if $test_trigger == false
           $field_effect_bg = "fire"
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :Fire
-          @battle.pbDisplay(_INTL("The field is ablaze."))
+          @battle.pbDisplay(_INTL("The field is ablaze.")) if $test_trigger == false
         end
       when :SOUND
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The city strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The city strengthened the attack!")) if $test_trigger == false
         @battle.allBattlers.each do |pkmn|
           confuse = rand(100)
           if confuse > 85
@@ -376,43 +376,47 @@ class Battle::Move
         end
       when :GROUND
         if name == "Bulldoze" || name == "Earthquake" || name == "Stomping Tantrum"
-          @battle.pbDisplay(_INTL("The city came crashing down!"))
+          @battle.pbDisplay(_INTL("The city came crashing down!")) if $test_trigger == false
           $field_effect_bg = "rocky"
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :None
           user.pbOwnSide.effects[PBEffects::StealthRock] = true if user.pbOwnSide.effects[PBEffects::StealthRock] == false
           target.pbOwnSide.effects[PBEffects::StealthRock] = true if target.pbOwnSide.effects[PBEffects::StealthRock] == false
-          @battle.pbDisplay(_INTL("City rubble and rocks are scattered across each side!"))
+          @battle.pbDisplay(_INTL("City rubble and rocks are scattered across each side!")) if $test_trigger == false
         end
       when :ELECTRIC
         if $outage == false
           multipliers[:final_damage_multiplier] *= 1.2
-          @battle.pbDisplay(_INTL("The attack drew power from the city!"))
+          @battle.pbDisplay(_INTL("The attack drew power from the city!")) if $test_trigger == false
           @battle.allOtherSideBattlers.each do |pkmn|
             pkmn.pbLowerStatStage(:ACCURACY,1,user) if !pkmn.pbHasType?(:ELECTRIC)
           end
           $field_effect_bg = "city_night"
           @battle.scene.pbRefreshEverything
-          @battle.pbDisplay(_INTL("Power outage!"))
+          @battle.pbDisplay(_INTL("Power outage!")) if $test_trigger == false
           $outage = true
         end
       when :DARK, :GHOST
         if $outage == true
           multipliers[:final_damage_multiplier] *= 1.2
-          type == :DARK ? @battle.pbDisplay(_INTL("The city's darkness powered the attack!")) : @battle.pbDisplay(_INTL("The shadows powered the attack!"))
+          if type == :DARK
+            @battle.pbDisplay(_INTL("The city's darkness powered the attack!")) if $test_trigger == false
+          else
+            @battle.pbDisplay(_INTL("The shadows powered the attack!")) if $test_trigger == false
+          end
         end
       end
     when :Ruins
       case type
       when :FIRE, :WATER, :GRASS
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The ruins strengthened the attack!")) if $test_trigger == false
       when :DRAGON
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The ruins strengthened the attack!")) if $test_trigger == false
       when :GHOST
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The ruins strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The ruins strengthened the attack!")) if $test_trigger == false
       end
       if target.pbHasType?(:GHOST) && target.hp == target.totalhp
         multipliers[:final_damage_multiplier] /= 2
@@ -424,47 +428,55 @@ class Battle::Move
       case type
       when :FAIRY, :BUG, :GRASS
         multipliers[:final_damage_multiplier] *= 1.2
-        @battle.pbDisplay(_INTL("The garden strengthened the attack!"))
+        @battle.pbDisplay(_INTL("The garden strengthened the attack!")) if $test_trigger == false
       when :FIRE
         if user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
-          @battle.pbDisplay(_INTL("The garden caught fire!"))
+          @battle.pbDisplay(_INTL("The garden caught fire!")) if $test_trigger == false
           $field_effect_bg = "fire"
           $orig_grass = false
           $orig_flying = false
           @battle.scene.pbRefreshEverything
           @battle.field.field_effects = :Fire
-          @battle.pbDisplay(_INTL("The field is ablaze."))
+          @battle.pbDisplay(_INTL("The field is ablaze.")) if $test_trigger == false
         end
       when :FLYING
         if user.effectiveWeather != :Rain && user.effectiveWeather != :HeavyRain && user.effectiveWeather != :AcidRain
-          @battle.pbDisplay(_INTL("The attack kicked up spores!"))
+          @battle.pbDisplay(_INTL("The attack kicked up spores!")) if $test_trigger == false
           spore = rand(10)
           spore2 = rand(10)
-          case spore
-          when 0
-            user.status = :PARALYSIS
-            @battle.pbDisplay(_INTL("{1} was paralyzed!",user.pbThis))
-          when 3
-            user.status = :POISON
-            @battle.pbDisplay(_INTL("{1} was poisoned!",user.pbThis))
-          when 6
-            user.status = :SLEEP
-            @battle.pbDisplay(_INTL("{1} became drowsy!",user.pbThis))
-          when 1,2,4,5,7,8,9
-            @battle.pbDisplay(_INTL("The spores had no effect on {1}!",user.pbThis))
+          if user.status == :NONE
+            case spore
+            when 0
+              user.status = :PARALYSIS
+              @battle.pbDisplay(_INTL("{1} was paralyzed!",user.pbThis))
+            when 3
+              user.status = :POISON
+              @battle.pbDisplay(_INTL("{1} was poisoned!",user.pbThis))
+            when 6
+              user.status = :SLEEP
+              @battle.pbDisplay(_INTL("{1} fell asleep!",user.pbThis))
+            when 1,2,4,5,7,8,9
+              @battle.pbDisplay(_INTL("The spores had no effect on {1}!",user.pbThis)) if $test_trigger == false
+            end
+          else
+            @battle.pbDisplay(_INTL("But {1} was already statused.",user.pbThis)) if $test_trigger == false
           end
-          case spore2
-          when 0
-            target.status = :PARALYSIS
-            @battle.pbDisplay(_INTL("{1} was paralyzed!",target.pbThis))
-          when 3
-            target.status = :POISON
-            @battle.pbDisplay(_INTL("{1} was poisoned!",target.pbThis))
-          when 6
-            target.status = :SLEEP
-            @battle.pbDisplay(_INTL("{1} became drowsy!",target.pbThis))
-          when 1,2,4,5,7,8,9
-            @battle.pbDisplay(_INTL("The spores had no effect on {1}!",target.pbThis))
+          if target.status == :NONE
+            case spore2
+            when 0
+              target.status = :PARALYSIS
+              @battle.pbDisplay(_INTL("{1} was paralyzed!",target.pbThis))
+            when 3
+              target.status = :POISON
+              @battle.pbDisplay(_INTL("{1} was poisoned!",target.pbThis))
+            when 6
+              target.status = :SLEEP
+              @battle.pbDisplay(_INTL("{1} fell asleep!",target.pbThis))
+            when 1,2,4,5,7,8,9
+              @battle.pbDisplay(_INTL("The spores had no effect on {1}!",target.pbThis)) if $test_trigger == false
+            end
+          else
+            @battle.pbDisplay(_INTL("But {1} was already statused.",target.pbThis)) if $test_trigger == false
           end
         end
       end

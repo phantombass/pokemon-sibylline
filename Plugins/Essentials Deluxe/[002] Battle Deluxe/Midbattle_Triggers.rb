@@ -247,6 +247,17 @@ class Battle::Move
             target_triggers.push((target.pbOwnedByPlayer?) ? "lowhp" : (target.opposes?) ? "lowhp_foe" : "lowhp_ally")
             target_triggers.push((target.pbOwnedByPlayer?) ? "lowhp_final" : (target.opposes?) ? "lowhp_final_foe" : "lowhp_final_ally")
           end
+        elsif target.hp <= target.totalhp / 2
+          if @battle.pbParty(target.index).length > @battle.pbSideSize(target.index)
+            if @battle.pbAbleNonActiveCount(target.index) == 0
+              target_triggers.push((target.pbOwnedByPlayer?) ? "halfhp_final" : (target.opposes?) ? "halfhp_final_foe" : "halfhp_final_ally")
+            else
+              target_triggers.push((target.pbOwnedByPlayer?) ? "halfhp" : (target.opposes?) ? "halfhp_foe" : "halfhp_ally")
+            end
+          else
+            target_triggers.push((target.pbOwnedByPlayer?) ? "halfhp" : (target.opposes?) ? "halfhp_foe" : "halfhp_ally")
+            target_triggers.push((target.pbOwnedByPlayer?) ? "halfhp_final" : (target.opposes?) ? "halfhp_final_foe" : "halfhp_final_ally")
+          end
         end
       end
       @battle.scene.dx_midbattle(target.index, user.index, *target_triggers) if target_triggers.length > 0

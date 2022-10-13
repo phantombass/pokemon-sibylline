@@ -8,8 +8,33 @@
 # Allows certain data to be rewritten by plugin compilers.
 #-------------------------------------------------------------------------------
 module GameData
+  class Ability
+    attr_accessor :real_name
+    attr_accessor :real_description
+    attr_accessor :flags
+  end
+
+  class Item
+    attr_accessor :real_name
+    attr_accessor :real_name_plural
+    attr_accessor :pocket
+    attr_accessor :real_description
+    attr_accessor :flags
+  end
+
   class Move
+    attr_accessor :real_name
+    attr_accessor :type
+    attr_accessor :category
+    attr_accessor :base_damage
+    attr_accessor :accuracy
+    attr_accessor :total_pp
+    attr_accessor :target
+    attr_accessor :priority
     attr_accessor :function_code
+    attr_accessor :flags
+    attr_accessor :effect_chance
+    attr_accessor :real_description
   end
 
   class Species
@@ -39,6 +64,9 @@ module Compiler
     plugin_write_all
     if !PLUGIN_FILES.empty?
       Console.echo_h1 _INTL("Writing all PBS/Plugin files")
+      if PluginManager.installed?("Improved Field Skills")
+        write_field_skills
+      end
       if PluginManager.installed?("ZUD Mechanics")
         write_dynamax_metrics
         write_power_moves
@@ -109,6 +137,118 @@ module Compiler
   end
 
   #-----------------------------------------------------------------------------
+  # Compiles any additional abilities included by a plugin.
+  #-----------------------------------------------------------------------------
+  def compile_plugin_abilities
+    compiled = false
+    return if PLUGIN_FILES.empty?
+    schema = GameData::Ability::SCHEMA
+    ability_names        = []
+    ability_descriptions = []
+    PLUGIN_FILES.each do |plugin|
+      path = "PBS/Plugins/#{plugin}/abilities.txt"
+      next if !safeExists?(path)
+      compile_pbs_file_message_start(path)
+      ability_hash = nil
+      idx = 0
+      #-------------------------------------------------------------------------
+      # Ability is an existing ability to be edited.
+      #-------------------------------------------------------------------------
+      File.open(path, "rb") { |f|
+        FileLineData.file = path
+        pbEachFileSectionEx(f) { |contents, ability_id|
+          echo "." if idx % 250 == 0
+          idx += 1
+          FileLineData.setSection(ability_id, "header", nil)
+          id = ability_id.to_sym
+          next if !GameData::Ability.try_get(id)
+          ability = GameData::Ability::DATA[id]
+          schema.keys.each do |key|
+            if nil_or_empty?(contents[key])
+              contents[key] = nil
+              next
+            end
+            FileLineData.setSection(ability_id, key, contents[key])
+            value = pbGetCsvRecord(contents[key], key, schema[key])
+            value = nil if value.is_a?(Array) && value.length == 0
+            contents[key] = value
+            case key
+            when "Name"
+              if ability.real_name != contents[key]
+                ability.real_name = contents[key]
+                ability_names.push(contents[key])
+                compiled = true
+              end
+            when "Description"
+              if ability.real_description != contents[key]
+                ability.real_description = contents[key]
+                ability_descriptions.push(contents[key])
+                compiled = true
+              end
+            when "Flags"
+              if ability.flags != contents[key]
+                contents[key] = [contents[key]] if !contents[key].is_a?(Array)
+                contents[key].compact!
+                ability.flags = contents[key]
+                compiled = true
+              end
+            end
+          end
+        }
+      }
+      #-------------------------------------------------------------------------
+      # Ability is a newly added ability.
+      #-------------------------------------------------------------------------
+      pbCompilerEachPreppedLine(path) { |line, line_no|
+        echo "." if idx % 250 == 0
+        idx += 1
+        if line[/^\s*\[\s*(.+)\s*\]\s*$/]
+          GameData::Ability.register(ability_hash) if ability_hash
+          ability_id = $~[1].to_sym
+          if GameData::Ability.exists?(ability_id)
+            ability_hash = nil
+            next
+          end
+          ability_hash = {
+            :id => ability_id
+          }
+        elsif line[/^\s*(\w+)\s*=\s*(.*)\s*$/] && !ability_hash.nil?
+          property_name = $~[1]
+          if property_name == "EditOnly"
+            ability_hash = nil
+            next
+          end
+          line_schema = schema[property_name]
+          next if !line_schema
+          property_value = pbGetCsvRecord($~[2], line_no, line_schema)
+          ability_hash[line_schema[0]] = property_value
+          case property_name
+          when "Name"
+            ability_names.push(ability_hash[:name])
+          when "Description"
+            ability_descriptions.push(ability_hash[:description])
+          end
+        end
+      }
+      if ability_hash
+        GameData::Ability.register(ability_hash)
+        compiled = true
+      end
+      process_pbs_file_message_end
+      begin
+        File.delete(path)
+        rescue SystemCallError
+      end
+    end
+    if compiled
+      GameData::Ability.save
+      Compiler.write_abilities
+      MessageTypes.setMessagesAsHash(MessageTypes::Abilities, ability_names)
+      MessageTypes.setMessagesAsHash(MessageTypes::AbilityDescs, ability_descriptions)
+    end
+  end
+
+  #-----------------------------------------------------------------------------
   # Compiles any additional items included by a plugin.
   #-----------------------------------------------------------------------------
   def compile_plugin_items
@@ -124,6 +264,65 @@ module Compiler
       compile_pbs_file_message_start(path)
       item_hash = nil
       idx = 0
+      #-------------------------------------------------------------------------
+      # Item is an existing item to be edited.
+      #-------------------------------------------------------------------------
+      File.open(path, "rb") { |f|
+        FileLineData.file = path
+        pbEachFileSectionEx(f) { |contents, item_id|
+          echo "." if idx % 250 == 0
+          idx += 1
+          FileLineData.setSection(item_id, "header", nil)
+          id = item_id.to_sym
+          next if !GameData::Item.try_get(id)
+          item = GameData::Item::DATA[id]
+          schema.keys.each do |key|
+            if nil_or_empty?(contents[key])
+              contents[key] = nil
+              next
+            end
+            FileLineData.setSection(item_id, key, contents[key])
+            value = pbGetCsvRecord(contents[key], key, schema[key])
+            value = nil if value.is_a?(Array) && value.length == 0
+            contents[key] = value
+            case key
+            when "Name"
+              if item.real_name != contents[key]
+                item.real_name = contents[key]
+                item_names.push(contents[key])
+                compiled = true
+              end
+            when "NamePlural"
+              if item.real_name_plural != contents[key]
+                item.real_name_plural = contents[key]
+                item_names_plural.push(contents[key])
+                compiled = true
+              end
+            when "Description"
+              if item.real_description != contents[key]
+                item.real_description = contents[key]
+                item_descriptions.push(contents[key])
+                compiled = true
+              end
+            when "Flags"
+              if item.flags != contents[key]
+                contents[key] = [contents[key]] if !contents[key].is_a?(Array)
+                contents[key].compact!
+                item.flags = contents[key]
+                compiled = true
+              end
+            when "Pocket"
+              if item.pocket != contents[key]
+                item.pocket = contents[key]
+                compiled = true
+              end
+            end
+          end
+        }
+      }
+	  #-------------------------------------------------------------------------
+	  # Item is a newly added item.
+	  #-------------------------------------------------------------------------
       pbCompilerEachPreppedLine(path) { |line, line_no|
         echo "." if idx % 250 == 0
         idx += 1
@@ -139,6 +338,10 @@ module Compiler
           }
         elsif line[/^\s*(\w+)\s*=\s*(.*)\s*$/] && !item_hash.nil?
           property_name = $~[1]
+          if property_name == "EditOnly"
+            item_hash = nil
+            next
+          end
           line_schema = schema[property_name]
           next if !line_schema
           property_value = pbGetCsvRecord($~[2], line_no, line_schema)
@@ -187,6 +390,61 @@ module Compiler
       compile_pbs_file_message_start(path)
       move_hash = nil
       idx = 0
+      #-------------------------------------------------------------------------
+      # Move is an existing move to be edited.
+      #-------------------------------------------------------------------------
+      File.open(path, "rb") { |f|
+        FileLineData.file = path
+        pbEachFileSectionEx(f) { |contents, move_id|
+          echo "." if idx % 500 == 0
+          idx += 1
+          FileLineData.setSection(move_id, "header", nil)
+          id = move_id.to_sym
+          next if !GameData::Move.try_get(id)
+          move = GameData::Move::DATA[id]
+          schema.keys.each do |key|
+            if nil_or_empty?(contents[key])
+              contents[key] = nil
+              next
+            end
+            compiled = true
+            FileLineData.setSection(move_id, key, contents[key])
+            value = pbGetCsvRecord(contents[key], key, schema[key])
+            value = nil if value.is_a?(Array) && value.length == 0
+            contents[key] = value
+            case key
+            when "Name"
+              if move.real_name != contents[key]
+                move.real_name = contents[key]
+                move_names.push(contents[key])
+              end
+            when "Description"
+              if move.real_description != contents[key]
+                move.real_description = contents[key]
+                move_descriptions.push(contents[key])
+              end
+            when "Flags"
+              if move.flags != contents[key]
+                contents[key] = [contents[key]] if !contents[key].is_a?(Array)
+                contents[key].compact!
+                move.flags = contents[key]
+              end
+            when "Type"         then move.type          = contents[key] if move.type          != contents[key]
+            when "Category"     then move.category      = contents[key] if move.category      != contents[key]
+            when "Power"        then move.base_damage   = contents[key] if move.base_damage   != contents[key]
+            when "Accuracy"     then move.accuracy      = contents[key] if move.accuracy      != contents[key]
+            when "TotalPP"      then move.total_pp      = contents[key] if move.total_pp      != contents[key]
+            when "Target"       then move.target        = contents[key] if move.target        != contents[key]
+            when "Priority"     then move.priority      = contents[key] if move.priority      != contents[key]
+            when "FunctionCode" then move.function_code = contents[key] if move.function_code != contents[key]
+            when "EffectChance" then move.effect_chance = contents[key] if move.effect_chance != contents[key]
+            end
+          end
+        }
+      }
+      #-------------------------------------------------------------------------
+      # Move is a newly added move.
+      #-------------------------------------------------------------------------
       pbCompilerEachPreppedLine(path) { |line, line_no|
         echo "." if idx % 500 == 0
         idx += 1
@@ -210,6 +468,10 @@ module Compiler
           }
         elsif line[/^\s*(\w+)\s*=\s*(.*)\s*$/] && !move_hash.nil?
           property_name = $~[1]
+          if property_name == "EditOnly"
+            move_hash = nil
+            next
+          end
           line_schema = schema[property_name]
           next if !line_schema
           property_value = pbGetCsvRecord($~[2], line_no, line_schema)
@@ -317,9 +579,13 @@ module Compiler
   #-----------------------------------------------------------------------------
   def compile_all(mustCompile)
     PLUGIN_FILES.each do |plugin|
-      for file in ["items", "moves", "pokemon"]
+      for file in ["abilities", "items", "moves", "pokemon"]
         path = "PBS/Plugins/#{plugin}/#{file}.txt"
         mustCompile = true if safeExists?(path)
+      end
+      if plugin == "Improved Field Skills"
+        path = "PBS/Plugins/#{plugin}/field_skills.txt"
+        mustCompile = true if !safeExists?(path)
       end
     end
     return if !mustCompile
@@ -329,23 +595,30 @@ module Compiler
     if !PLUGIN_FILES.empty?
       echoln ""
       Console.echo_h1 _INTL("Compiling additional plugin data")
+      compile_plugin_abilities
       compile_plugin_items
       compile_plugin_moves
       compile_plugin_species_data
       echoln ""
+      if PluginManager.installed?("Improved Field Skills")
+        Console.echo_li "Improved Field Skills"
+        write_field_skills       # Depends on Species, Moves
+        Console.echo_li "Improved Field Skills"
+        compile_field_skills     # Depends on Species
+      end
       if PluginManager.installed?("ZUD Mechanics")
         Console.echo_li "ZUD Mechanics"
         compile_lair_maps
         Console.echo_li "ZUD Mechanics"
         compile_raid_ranks       # Depends on Species
         Console.echo_li "ZUD Mechanics"
-        compile_power_moves      # Depends on Move, Item, Type, Species
+        compile_power_moves      # Depends on Moves, Items, Types, Species
         Console.echo_li "ZUD Mechanics"
         compile_dynamax_metrics  # Depends on Species, Power Moves
       end
       if PluginManager.installed?("Pokémon Birthsigns")
         Console.echo_li "Pokémon Birthsigns"
-        compile_birthsigns       # Depends on Type, Move, Ability, Species
+        compile_birthsigns       # Depends on Types, Moves, Abilities, Species
       end
       echoln ""
       Console.echo_h2("Plugin data fully compiled", text: :green)

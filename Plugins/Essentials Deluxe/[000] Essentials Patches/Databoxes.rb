@@ -10,9 +10,10 @@
 class Battle::Scene::PokemonDataBox < SpriteWrapper
   def initializeDataBoxGraphic(sideSize)
     onPlayerSide = @battler.index.even?
+    @can_focus = PluginManager.installed?("Focus Meter System")
     @raid_boss = PluginManager.installed?("ZUD Mechanics") && @battler.effects[PBEffects::MaxRaidBoss]
     path = "Graphics/Pictures/Battle/"
-    path = "Graphics/Plugins/Focus Meter/Databoxes/" if PluginManager.installed?("Focus Meter System")
+    path = "Graphics/Plugins/Focus Meter/Databoxes/" if @can_focus
     player_normal = path + "databox_normal"
     player_thin   = path + "databox_thin"
     enemy_normal  = path + "databox_normal_foe"
@@ -21,15 +22,15 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
     enemy_data    = (sideSize == 1) ? enemy_normal  : enemy_thin
     enemy_data    = "Graphics/Plugins/ZUD/Battle/databox_raid" if @raid_boss
     bgFilename    = [player_data, enemy_data][@battler.index % 2]
-    if PluginManager.installed?("Focus Meter System")
-      focus_InitializeDatabox(bgFilename)
-      focus_MeterSetup(onPlayerSide, sideSize)
+    if @can_focus
+      focus_InitializeDatabox(bgFilename, onPlayerSide)
+      focus_MeterSetup(onPlayerSide)
     end
     @databoxBitmap&.dispose
     @databoxBitmap = AnimatedBitmap.new(bgFilename)
     if onPlayerSide
-      @showHP  = true if sideSize==1
-      @showExp = true if sideSize==1
+      @showHP  = true if sideSize == 1
+      @showExp = true if sideSize == 1
       @spriteX = Graphics.width - 244
       @spriteY = Graphics.height - 192
       @spriteBaseX = 34
@@ -58,7 +59,7 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
   
   def x=(value)
     super
-    pbSetFocusBarX(value) if PluginManager.installed?("Focus Meter System")
+    pbSetFocusBarX(value) if @can_focus
     if @raid_boss
       @hpBar.x = value + 20
     else
@@ -70,7 +71,7 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
 
   def y=(value)
     super
-    pbSetFocusBarY(value) if PluginManager.installed?("Focus Meter System")
+    pbSetFocusBarY(value) if @can_focus
     if @raid_boss
       @hpBar.y = value + 34
     else
@@ -78,5 +79,26 @@ class Battle::Scene::PokemonDataBox < SpriteWrapper
     end
     @expBar.y    = value + 74
     @hpNumbers.y = value + 52
+  end
+  
+  def refresh
+    self.bitmap.clear
+    return if !@battler.pokemon
+    draw_background
+    draw_name
+    if @raid_boss
+      draw_raid_shield
+      draw_raid_counters
+    else
+      draw_level
+      draw_gender
+    end
+    draw_status
+    draw_shiny_icon
+    draw_special_form_icon
+    draw_owned_icon
+    refreshHP
+    refreshExp
+    refreshMeter if @can_focus
   end
 end

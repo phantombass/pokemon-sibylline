@@ -70,7 +70,7 @@ def species_cry_params(*params)
   data = {
     :species   => params[0] || nil,
     :form      => params[1] || 0,
-	:suffix    => params[2] || "",
+    :suffix    => params[2] || "",
     :shiny     => params[3] || false,
     :shadow    => params[4] || false,
     :dmax      => params[5] || false,
@@ -95,7 +95,7 @@ module GameData
       dmax      = params[:dmax]
       gmax      = params[:gmax]
       celestial = params[:celestial]
-      try_dmax_file = sprintf("%s/", dmax_folder)
+      try_dmax_folder = ""
       try_subfolder = sprintf("%s/", subfolder)
       try_species = species
       try_form    = (form > 0)    ? sprintf("_%d", form) : ""
@@ -105,8 +105,8 @@ module GameData
       try_gmax    = (gmax)        ? "_gmax"      : ""
       try_celest  = (celestial)   ? "_celestial" : ""
       factors = []
-      factors.push([8, sprintf("%s shiny/", subfolder), try_subfolder]) if shiny
-      factors.push([7, try_dmax_file, ""]) if dmax || gmax
+      factors.push([8, sprintf("%s", dmax_folder), try_dmax_folder]) if dmax || gmax
+      factors.push([7, sprintf("%s shiny/", subfolder), try_subfolder]) if shiny
       factors.push([6, try_celest, ""]) if celestial
       factors.push([5, try_gmax,   ""]) if gmax
       factors.push([4, try_dmax,   ""]) if dmax
@@ -118,19 +118,19 @@ module GameData
         factors.each_with_index do |factor, index|
           value = ((i / (2**index)).even?) ? factor[1] : factor[2]
           case factor[0]
-          when 0 then try_species   = value
-          when 1 then try_form      = value
-          when 2 then try_gender    = value
-          when 3 then try_shadow    = value
-          when 4 then try_dmax      = value
-          when 5 then try_gmax      = value
-          when 6 then try_celest    = value
-          when 7 then try_dmax_file = value
-          when 8 then try_subfolder = value
+          when 0 then try_species     = value
+          when 1 then try_form        = value
+          when 2 then try_gender      = value
+          when 3 then try_shadow      = value
+          when 4 then try_dmax        = value
+          when 5 then try_gmax        = value
+          when 6 then try_celest      = value
+          when 7 then try_subfolder   = value
+          when 8 then try_dmax_folder = value
           end
         end
         try_species_text = try_species
-        ret = pbResolveBitmap(sprintf("%s%s%s%s%s%s%s%s%s%s", path, try_subfolder, try_dmax_file,
+        ret = pbResolveBitmap(sprintf("%s%s%s%s%s%s%s%s%s%s", path, try_subfolder, try_dmax_folder,
                               try_species_text, try_form, try_gender, try_shadow, 
                               try_dmax, try_gmax, try_celest))
         return ret if ret
@@ -148,13 +148,13 @@ module GameData
     #---------------------------------------------------------------------------
     def self.front_sprite_filename(*params)
       params = species_sprite_params(*params)
-      dmax = (params[:gmax]) ? "Gigantamax" : (params[:dmax]) ? "Dynamax" : ""
+      dmax = (params[:gmax]) ? "Gigantamax/" : (params[:dmax]) ? "Dynamax/" : ""
       return self.check_graphic_file("Graphics/Pokemon/", params, "Front", dmax)
     end
 
     def self.back_sprite_filename(*params)
       params = species_sprite_params(*params)
-      dmax = (params[:gmax]) ? "Gigantamax" : (params[:dmax]) ? "Dynamax" : ""
+      dmax = (params[:gmax]) ? "Gigantamax/" : (params[:dmax]) ? "Dynamax/" : ""
       return self.check_graphic_file("Graphics/Pokemon/", params, "Back", dmax)
     end
 
@@ -165,14 +165,14 @@ module GameData
       return self.front_sprite_filename(*params)
     end
 	
-	#---------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # Compatibility with Following Pokemon EX.
     #---------------------------------------------------------------------------
-	def self.ow_sprite_filename(*params)
+    def self.ow_sprite_filename(*params)
       params = species_overworld_params(*params)
       ret = self.check_graphic_file("Graphics/Characters/", params, "Followers")
-	  ret = "Graphics/Characters/Followers/" if nil_or_empty?(ret)
-	  return ret
+      ret = "Graphics/Characters/Followers/" if nil_or_empty?(ret)
+      return ret
     end
 
     #---------------------------------------------------------------------------
@@ -251,7 +251,7 @@ module GameData
     def self.icon_filename(*params)
       params = species_icon_params(*params)
       return self.egg_icon_filename(params[:species], params[:form]) if params[:egg]
-      dmax = (params[:gmax]) ? "Gigantamax" : (params[:dmax]) ? "Dynamax" : ""
+      dmax = (params[:gmax]) ? "Gigantamax/" : (params[:dmax]) ? "Dynamax/" : ""
       return self.check_graphic_file("Graphics/Pokemon/", params, "Icons", dmax)
     end
     
@@ -548,7 +548,7 @@ class PokemonSpeciesIconSprite < SpriteWrapper
   attr_reader :gmax
   attr_reader :celestial
   
-  def initialize(species,viewport=nil)
+  def initialize(species, viewport = nil)
     super(viewport)
     @species      = species
     @gender       = 0

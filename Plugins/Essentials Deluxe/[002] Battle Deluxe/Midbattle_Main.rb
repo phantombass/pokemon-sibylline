@@ -9,9 +9,9 @@
 class Battle::Scene
   def dx_midbattle(idxBattler, idxTarget, *triggers)
     return if !$game_temp.dx_midbattle?
-    alt_battler  = nil
+    alt_trainer = alt_battler = nil
     base_battler = midbattle_Battler(idxBattler, idxTarget, :Self)
-    idxTrainer   = (idxBattler) ? @battle.pbGetOwnerIndexFromBattlerIndex(idxBattler) : 0
+    base_trainer = (idxBattler) ? @battle.pbGetOwnerIndexFromBattlerIndex(idxBattler) : 0
     midbattle    = $game_temp.dx_midbattle
     all_triggers = []
     triggers.each do |trigger| 
@@ -20,6 +20,19 @@ class Battle::Scene
                         trigger + "_repeat_alt",
                         trigger + "_random",
                         trigger + "_repeat_random") 
+    end
+    $game_temp.dx_midbattle.keys.each do |mid|
+      next if !$game_temp.dx_midbattle[mid].is_a?(Hash)
+      next if !$game_temp.dx_midbattle[mid].has_key?(:delay)
+      if $game_temp.dx_midbattle[mid][:delay].is_a?(Array)
+        $game_temp.dx_midbattle[mid][:delay].each do |delay_trigger|
+        $game_temp.dx_midbattle[mid][:delay] = nil if all_triggers.include?(delay_trigger)
+      end
+      else
+        if all_triggers.include?($game_temp.dx_midbattle[mid][:delay])
+          $game_temp.dx_midbattle[mid][:delay] = nil 
+        end
+      end
     end
     all_triggers.each do |trigger|
       next if !midbattle.has_key?(trigger)
@@ -47,7 +60,9 @@ class Battle::Scene
           string = k.to_s.split("_")
           keys.push([string[0].to_sym, k])
         end
+        delay = false
         for key in keys
+          trainer = (alt_trainer.nil?) ? base_trainer : alt_trainer
           battler = (alt_battler.nil?) ? base_battler : alt_battler
           value = midbattle[trigger][key[1]]
           case key[0]
@@ -57,6 +72,12 @@ class Battle::Scene
           when :battler
             alt_battler = midbattle_Battler(idxBattler, idxTarget, value)
           #---------------------------------------------------------------------
+          # Sets the trainer.
+          #---------------------------------------------------------------------
+          when :trainer
+            temp_battler = midbattle_Battler(idxBattler, idxTarget, value)
+            alt_trainer = @battle.pbGetOwnerIndexFromBattlerIndex(temp_battler.index)
+          #---------------------------------------------------------------------
           # Renames a battler.
           #---------------------------------------------------------------------	
           when :rename
@@ -64,24 +85,31 @@ class Battle::Scene
             battler.name = battler.pokemon.name
             pbRefresh
           #---------------------------------------------------------------------
+          # Delays further actions until the inputted trigger has been met.
+          #---------------------------------------------------------------------	
+          when :delay
+            if value.is_a?(String) || value.is_a?(Array)
+            delay = true
+            break
+          end
+          #---------------------------------------------------------------------
+          # Pauses further actions for a number of frames.
+          #---------------------------------------------------------------------
+          when :wait, :pause          then pbWait(value)
+          #---------------------------------------------------------------------
           # Changes BGM.
           #---------------------------------------------------------------------
-          when :bgm, :music
-            if $game_system.playing_bgm.name != value
-              pbBGMFade(2.0)
-              pbWait(100)
-              pbBGMPlay(value)
-            end
+          when :bgm, :music           then midbattle_ChangeBGM(value)
           #---------------------------------------------------------------------
           # Plays a sound effect.
           #---------------------------------------------------------------------
-          when :playcry, :cry         then battler.pokemon.play_cry; pbWait(20)
-          when :playsound, :playSE    then pbSEPlay(value);          pbWait(20)
+          when :playcry, :cry         then battler.pokemon.play_cry
+          when :playsound, :playSE    then pbSEPlay(value)
           #---------------------------------------------------------------------
           # Displays text and speech.
           #---------------------------------------------------------------------
-          when :text, :message        then pbMidbattleSpeech(idxTrainer, idxTarget, battler, value, false)
-          when :speech, :dialogue     then pbMidbattleSpeech(idxTrainer, idxTarget, battler, value)
+          when :text, :message        then pbMidbattleSpeech(trainer, idxTarget, battler, value, false)
+          when :speech, :dialogue     then pbMidbattleSpeech(trainer, idxTarget, battler, value)
           #---------------------------------------------------------------------
           # Plays an animation.
           #---------------------------------------------------------------------
@@ -93,11 +121,11 @@ class Battle::Scene
           #---------------------------------------------------------------------
           # Changes to battlers or battle states.
           #---------------------------------------------------------------------
-          when :hp               	  then midbattle_ChangeHP(battler, value)
-          when :status           	  then midbattle_ChangeStatus(battler, value)
-          when :form             	  then midbattle_ChangeForm(battler, value)
-          when :ability          	  then midbattle_ChangeAbility(battler, value)
-          when :item, :helditem  	  then midbattle_ChangeItem(battler, value)
+          when :hp                    then midbattle_ChangeHP(battler, value)
+          when :status                then midbattle_ChangeStatus(battler, value)
+          when :form                  then midbattle_ChangeForm(battler, value)
+          when :ability               then midbattle_ChangeAbility(battler, value)
+          when :item, :helditem       then midbattle_ChangeItem(battler, value)
           when :move, :moves      	  then midbattle_ChangeMoves(battler, value)
           when :stat, :stats          then midbattle_ChangeStats(battler, value) 
           when :effect, :effects      then midbattle_BattlerEffects(battler, value)
@@ -115,7 +143,8 @@ class Battle::Scene
             @battle.decision = value
           end
         end
-        $game_temp.dx_midbattle.delete(trigger) if !trigger.include?("_repeat")
+        next if trigger.include?("_repeat") || delay
+        $game_temp.dx_midbattle.delete(trigger)
       end
     end
   end
@@ -198,8 +227,8 @@ class Battle::Scene
       battler = (idxTarget) ? @battle.battlers[idxTarget] : default.pbDirectOpposing
       if battler.allAllies.length > 0 
         case index
-        when :Opposing1 then return battler.allAllies.first
-        when :Opposing2 then return battler.allAllies.last
+        when :OpposingAlly  then return battler.allAllies.first
+        when :OpposingAlly2 then return battler.allAllies.last
         end
       end
       return battler
@@ -324,7 +353,7 @@ class Battle::Scene
       end
       form = total_forms.sample
     end
-	return if !form
+    return if !form
     species = GameData::Species.get_species_form(battler.species, form)
     form = GameData::Species.get(species).form
     if battler.form != form
@@ -421,25 +450,43 @@ class Battle::Scene
   #-------------------------------------------------------------------------------
   def midbattle_ChangeStats(battler, value)
     return if !battler || battler.fainted? || @battle.decision > 0
-    showAnim = true
-    last_change = 0
-    for i in 0...value.length / 2
-      stat, stage = value[i * 2], value[i * 2 + 1]
-      next if stage == 0
-      if stage > 0 # Raise stats
-        next if !battler.pbCanRaiseStatStage?(stat, battler)
-        showAnim = true if !showAnim && last_change == -1
-        if battler.pbRaiseStatStage(stat, stage, battler, showAnim)
-          showAnim = false
-          last_change = 1
+    case value
+    when Array
+      showAnim = true
+      last_change = 0
+      for i in 0...value.length / 2
+        stat, stage = value[i * 2], value[i * 2 + 1]
+        next if stage == 0
+        if stage > 0 # Raise stats
+          next if !battler.pbCanRaiseStatStage?(stat, battler)
+          showAnim = true if !showAnim && last_change == -1
+          if battler.pbRaiseStatStage(stat, stage, battler, showAnim)
+            showAnim = false
+            last_change = 1
+          end
+        else # Lower stats
+          next if !battler.pbCanLowerStatStage?(stat, battler)
+          showAnim = true if !showAnim && last_change == 1
+          if battler.pbLowerStatStage(stat, stage.abs, battler, showAnim)
+            showAnim = false
+            last_change = -1
+          end
         end
-      else # Lower stats
-        next if !battler.pbCanLowerStatStage?(stat, battler)
-        showAnim = true if !showAnim && last_change == 1
-        if battler.pbLowerStatStage(stat, stage.abs, battler, showAnim)
-          showAnim = false
-          last_change = -1
-        end
+      end
+    when :Reset
+      if battler.hasAlteredStatStages?
+        battler.pbResetStatStages
+        @battle.pbDisplay(_INTL("{1}'s stat changes were removed!", battler.pbThis))
+      end
+    when :Reset_Raised
+      if battler.hasRaisedStatStages?
+        GameData::Stat.each_battle { |s| battler.stages[s.id] = 0 if battler.stages[s.id] > 0 }
+        @battle.pbDisplay(_INTL("{1}'s raised stat changes were removed!", battler.pbThis))
+      end
+    when :Reset_Lowered
+      if battler.hasLoweredStatStages?
+        GameData::Stat.each_battle { |s| battler.stages[s.id] = 0 if battler.stages[s.id] < 0 }
+        @battle.pbDisplay(_INTL("{1}'s lowered stat changes were removed!", battler.pbThis))
       end
     end
   end
@@ -566,6 +613,21 @@ class Battle::Scene
   end
   
   #-------------------------------------------------------------------------------
+  # Changes the background music.
+  #-------------------------------------------------------------------------------
+  def midbattle_ChangeBGM(value)
+    return if @battle.decision > 0
+    if value.is_a?(Array)
+      bgm, fade = value[0], value[1] * 1.0
+    else
+      bgm, fade = value, 0.0
+    end
+    pbBGMFade(fade)
+    pbWait((fade * 60).round)
+    pbBGMPlay(bgm)
+  end
+  
+  #-------------------------------------------------------------------------------
   # Changes the backdrop.
   #-------------------------------------------------------------------------------
   def midbattle_ChangeBackdrop(value)
@@ -598,4 +660,12 @@ class Battle::Scene
     end
     pbFlashRefresh
   end
+end
+
+
+#-------------------------------------------------------------------------------
+# Battle Facility compatibility.
+#-------------------------------------------------------------------------------
+class Battle::DebugSceneNoLogging
+  def dx_midbattle(idxBattler, idxTarget, *triggers); end
 end

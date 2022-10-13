@@ -26,7 +26,7 @@ EventHandlers.add(:on_trainer_load, :level_scale,
             level = mlv + 1 + rand(3)
           end
         elsif $PokemonSystem.level_caps == 0
-          levelcap = LEVEL_CAP[$game_system.level_cap]
+          levelcap = $PokemonSystem.difficulty < 3 ? LEVEL_CAP[$game_system.level_cap] : LEVEL_CAP_INSANE[$game_system.level_cap]
           if $game_switches[LevelScale::GYM_SWITCH]
             level = levelcap
           else

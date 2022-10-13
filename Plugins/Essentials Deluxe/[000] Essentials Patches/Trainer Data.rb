@@ -9,33 +9,11 @@
 #-------------------------------------------------------------------------------
 module GameData
   class Trainer
-    SCHEMA = {
-      "Items"        => [:items,           "*e", :Item],
-      "LoseText"     => [:lose_text,       "q"],
-      "Pokemon"      => [:pokemon,         "ev", :Species],
-      "Form"         => [:form,            "u"],
-      "Name"         => [:name,            "s"],
-      "Moves"        => [:moves,           "*e", :Move],
-      "Ability"      => [:ability,         "e", :Ability],
-      "AbilityIndex" => [:ability_index,   "u"],
-      "Item"         => [:item,            "e", :Item],
-      "Gender"       => [:gender,          "e", { "M" => 0, "m" => 0, "Male" => 0, "male" => 0, "0" => 0,
-                                                  "F" => 1, "f" => 1, "Female" => 1, "female" => 1, "1" => 1 }],
-      "Nature"       => [:nature,          "e", :Nature],
-      "Role"         => [:role,              "e", :Role],
-      "IV"           => [:iv,              "uUUUUU"],
-      "EV"           => [:ev,              "uUUUUU"],
-      "Happiness"    => [:happiness,       "u"],
-      "Shiny"        => [:shininess,       "b"],
-      "SuperShiny"   => [:super_shininess, "b"],
-      "Shadow"       => [:shadowness,      "b"],
-      "Ball"         => [:poke_ball,       "e", :Item],
-      "Ace"          => [:trainer_ace,     "b"],
-      "Focus"        => (PluginManager.installed?("Focus Meter System")) ? [:focus,     "e", :Focus]     : [:focus,    "u"],
-      "Birthsign"    => (PluginManager.installed?("Pokémon Birthsigns")) ? [:birthsign, "e", :Birthsign] : [:birthsign,"u"],
-      "DynamaxLvl"   => [:dynamax_lvl,     "u"],
-      "Gigantamax"   => [:gmaxfactor,      "b"]
-    }
+    SCHEMA["Ace"]        = [:trainer_ace, "b"]
+    SCHEMA["Focus"]      = [:focus,       "u"] # Placeholder
+    SCHEMA["Birthsign"]  = [:birthsign,   "u"] # Placeholder
+    SCHEMA["DynamaxLvl"] = [:dynamax_lvl, "u"]
+    SCHEMA["Gigantamax"] = [:gmaxfactor,  "b"]
 
     def to_trainer
       tr_name = self.name
@@ -63,8 +41,8 @@ module GameData
           pkmn.reset_moves
         end
         pkmn.ability_index = pkmn_data[:ability_index] || 0
-        pkmn.role = pkmn_data[:role] || :NONE
         pkmn.ability = pkmn_data[:ability]
+        pkmn.role = pkmn_data[:role] || :NONE
         pkmn.gender = pkmn_data[:gender] || ((trainer.male?) ? 0 : 1)
         pkmn.shiny = (pkmn_data[:shininess]) ? true : false
         pkmn.super_shiny = (pkmn_data[:super_shininess]) ? true : false

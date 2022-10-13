@@ -199,6 +199,54 @@ end
 
 
 #-------------------------------------------------------------------------------
+# Command window compatibility.
+#-------------------------------------------------------------------------------
+class Battle::Scene
+  def pbCommandMenuEx(idxBattler, texts, mode = 0)
+    can_focus = PluginManager.installed?("Focus Meter System")
+    pbShowWindow(COMMAND_BOX)
+    cw = @sprites["commandWindow"]
+    cw.setTexts(texts)
+    cw.setIndexAndMode(@lastCmd[idxBattler], mode)
+    pbSelectBattler(idxBattler)
+    ret = -1
+    loop do
+      oldIndex = cw.index
+      pbUpdate(cw)
+      if Input.trigger?(Input::LEFT)
+        cw.index -= 1 if (cw.index & 1) == 1
+      elsif Input.trigger?(Input::RIGHT)
+        cw.index += 1 if (cw.index & 1) == 0
+      elsif Input.trigger?(Input::UP)
+        cw.index -= 2 if (cw.index & 2) == 2
+      elsif Input.trigger?(Input::DOWN)
+        cw.index += 2 if (cw.index & 2) == 0
+      end
+      pbPlayCursorSE if cw.index != oldIndex
+      if Input.trigger?(Input::USE)
+        pbPlayDecisionSE
+        ret = cw.index
+        @lastCmd[idxBattler] = ret
+        pbToggleFocusPanel(false) if can_focus && ret > 0
+        break
+      elsif Input.trigger?(Input::BACK) && mode > 0
+        pbPlayCancelSE
+        break
+      elsif Input.trigger?(Input::F9) && $DEBUG
+        pbPlayDecisionSE
+        pbToggleFocusPanel(false) if can_focus
+        ret = -2
+        break
+      elsif can_focus && Input.triggerex?(Settings::FOCUS_PANEL_KEY)
+        pbToggleFocusPanel 
+      end
+    end
+    return ret
+  end
+end
+
+
+#-------------------------------------------------------------------------------
 # AI Battlers consider a variety of battle mechanics.
 #-------------------------------------------------------------------------------
 class Battle::AI

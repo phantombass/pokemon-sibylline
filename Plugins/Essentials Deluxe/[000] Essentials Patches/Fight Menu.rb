@@ -507,11 +507,16 @@ class Battle::Scene
       #=========================================================================
       if PluginManager.installed?("Focus Meter System")
         if Input.triggerex?(Settings::FOCUS_TRIGGER_KEY)
-          if cw.focusMode > 0
+          case cw.focusMode
+          when 1
+            cw.focusMode = 2
             pbPlayDecisionSE
-            break if yield -9
-            needRefresh = true
+          when 2
+            cw.focusMode = 1
+            pbPlayCancelSE
           end
+          break if yield -9
+          needRefresh = true
         elsif Input.triggerex?(Settings::FOCUS_PANEL_KEY)
           pbToggleFocusPanel
         end

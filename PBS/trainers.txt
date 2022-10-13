@@ -5,7 +5,7 @@
 [POKEMONTRAINER_May,Isabella]
 LoseText = Oh you are good!
 Pokemon = CHINGLING,5
-	Moves = MACHPULSE,GROWL
+	Moves = MACHPULSE,GROWL,CONFUSION
 #-------------------------------
 [POKEMONTRAINER_May,Isabella,1]
 LoseText = Oh you are good!
@@ -476,7 +476,7 @@ Pokemon = PHANTUMP,13
 	Item = DAMPROCK
 	Ability = DRIZZLE
 	Moves = PIXIEPUNCH,FLIPTURN,FAKEOUT,DRAINPUNCH
-	Role = SPECIALWALL
+	Role = PIVOT
 Pokemon = BIBAREL,14
 	Form = 1
 	Nature = ADAMANT

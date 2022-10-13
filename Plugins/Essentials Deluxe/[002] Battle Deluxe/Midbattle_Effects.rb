@@ -135,7 +135,12 @@ class Battle::Battler
         @battle.pbDisplay(_INTL(msg, pbThis(lowercase))) if msg
       end
     else
-      if $DELUXE_BATTLE_EFFECTS[:battler_default_false].include?(effect)
+      if PluginManager.installed?("Focus Meter System") && effect == PBEffects::FocusStyle
+        if GameData::Focus.exists?(setting) && @effects[effect] != setting
+          @effects[effect] = setting 
+          @battle.pbDisplay(_INTL(msg, pbThis(lowercase))) if msg
+        end
+      elsif $DELUXE_BATTLE_EFFECTS[:battler_default_false].include?(effect)
         if @effects[effect] != setting
           @effects[effect] = setting 
           @battle.pbDisplay(_INTL(msg, pbThis(lowercase))) if msg
@@ -195,7 +200,8 @@ class Battle::Battler
         if side.effects[effect] != setting
           side.effects[effect] = setting 
           @battle.pbDisplay(_INTL(msg, team)) if msg && !skip_message.include?(effect)
-          if [PBEffects::StealthRock, PBEffects::Steelsurge, PBEffects::StickyWeb].include?(effect)
+          if [PBEffects::StealthRock, PBEffects::StickyWeb].include?(effect) ||
+             PluginManager.installed?("ZUD Mechanics") && effect == PBEffects::Steelsurge
             repeat_message = effect if !setting
           end
         end

@@ -124,10 +124,12 @@ MenuHandlers.add(:field_effect_data, :garden, {
     pbPlayDecisionSE
     pbMessage(_INTL("+ Bug, Grass, Fairy"))
     pbMessage(_INTL("Fire moves cause Wildfire unless in the Rain."))
-    pbMessage(_INTL("Flying moves scatter random spores."))
+    pbMessage(_INTL("Flying moves scatter random spores unless in the Rain."))
     pbMessage(_INTL("Bugs get boosted defenses."))
+    pbMessage(_INTL("Activates Grassy Seed."))
     pbMessage(_INTL("Sap Sipper, Flower Veil, Leaf Guard and Grass Pelt activate."))
     pbMessage(_INTL("Bug, Grass, and Fairy recover HP every turn."))
+    pbMessage(_INTL("Cannot be combined with Grassy Terrain, and Grassy Surge fails."))
     next false
   }
 }

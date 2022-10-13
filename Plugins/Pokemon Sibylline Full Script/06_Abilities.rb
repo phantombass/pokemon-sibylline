@@ -10,13 +10,13 @@ class Battle::Battler
     if type == :ROCK && ability == :SCALER
       return true
     end
-    if type == :FIRE && ability == :FLASHFIRE
+    if type == :FIRE && [:FLASHFIRE,:STEAMENGINE].include?(ability)
       return true
     end
     if type == :GRASS && ability == :SAPSIPPER
       return true
     end
-    if type == :WATER && [:STORMDRAIN,:WATERABSORB,:DRYSKIN,:IRRIGATION].include?(ability)
+    if type == :WATER && [:STORMDRAIN,:WATERABSORB,:DRYSKIN,:IRRIGATION,:WATERCOMPACTION,:STEAMENGINE].include?(ability)
       return true
     end
     if type == :GROUND && ability == :LEVITATE
@@ -408,7 +408,7 @@ class Battle::Battler
       if showMessages
         msg = ""
         case self.status
-        when :SLEEP     then msg = _INTL("{1} is already drowsy!", pbThis)
+        when :SLEEP     then msg = _INTL("{1} is already asleep!", pbThis)
         when :POISON    then msg = _INTL("{1} is already poisoned!", pbThis)
         when :BURN      then msg = _INTL("{1} already has a burn!", pbThis)
         when :PARALYSIS then msg = _INTL("{1} is already paralyzed!", pbThis)
@@ -572,7 +572,7 @@ class Battle::Battler
     else
       case newStatus
       when :SLEEP
-        @battle.pbDisplay(_INTL("{1} became drowsy!", pbThis))
+        @battle.pbDisplay(_INTL("{1} fell asleep!", pbThis))
       when :POISON
         if newStatusCount > 0
           @battle.pbDisplay(_INTL("{1} was badly poisoned!", pbThis))
@@ -617,7 +617,7 @@ class Battle::Battler
     yield if block_given?
     case self.status
     when :SLEEP
-      @battle.pbDisplay(_INTL("{1} is drowsy.", pbThis))
+      @battle.pbDisplay(_INTL("{1} is asleep.", pbThis))
     when :POISON
       @battle.pbDisplay(_INTL("{1} was hurt by poison!", pbThis))
     when :BURN
@@ -668,25 +668,13 @@ class Battle::Battler
     return true if skipAccuracyCheck
     # Check status problems and continue their effects/cure them
     case @status
-#    when :SLEEP
-#      self.statusCount -= 1
-#      if @statusCount<=0
-#        pbCureStatus
-#      else
-#        pbContinueStatus
-#        if !move.usableWhenAsleep?   # Snore/Sleep Talk
-#          @lastMoveFailed = true
-#          return false
-#        end
-#      end
     when :SLEEP
-      self.statusCount += 1
-      if @battle.pbRandom(100)<10*self.statusCount
+      self.statusCount -= 1
+      if @statusCount<=0
         pbCureStatus
       else
         pbContinueStatus
-        if @battle.pbRandom(100)<25
-          @battle.pbDisplay(_INTL("{1} is too drowsy to move.",pbThis))
+        if !move.usableWhenAsleep?   # Snore/Sleep Talk
           @lastMoveFailed = true
           return false
         end
@@ -1594,5 +1582,15 @@ Battle::AbilityEffects::MoveImmunity.add(:WATERCOMPACTION,
 Battle::AbilityEffects::MoveImmunity.add(:STEAMENGINE,
   proc { |ability, user, target, move, type, battle, show_message|
     next (target.pbMoveImmunityStatRaisingAbility(user, move, type, :WATER, :SPEED, 6, show_message) || target.pbMoveImmunityStatRaisingAbility(user, move, type, :FIRE, :SPEED, 6, show_message))
+  }
+)
+
+Battle::AbilityEffects::OnSwitchIn.add(:GRASSYSURGE,
+  proc { |ability, battler, battle, switch_in|
+    next if battle.field.terrain == :Grassy
+    next if battler.effectiveField == :Garden
+    battle.pbShowAbilitySplash(battler)
+    battle.pbStartTerrain(battler, :Grassy)
+    # NOTE: The ability splash is hidden again in def pbStartTerrain.
   }
 )

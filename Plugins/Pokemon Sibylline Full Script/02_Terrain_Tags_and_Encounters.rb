@@ -192,7 +192,7 @@ GameData::EncounterType.register({
 
 def canUseMoveRockClimb?
   showmsg = true
-  return false if !$game_switches[HMCatalogue::RockClimb]
+  return false if HM_Catalogue.rock_climb != true
    if !$game_player.pbFacingTerrainTag.rock_climb
      pbMessage(_INTL("Can't use that here.")) if showmsg
      return false
@@ -254,13 +254,13 @@ end
 
 def pbRockClimb
   event = $game_player if !event
-  if !$game_switches[HMCatalogue::RockClimb]
+  if HM_Catalogue.rock_climb != true
     pbMessage(_INTL("These rocks look climbable."))
     return false
   end
   if pbConfirmMessage(_INTL("It's a large rock wall. Would you like to climb it?"))
-    if $PokemonBag.pbQuantity(:HIKINGGEAR)>0 || $game_switches[HMCatalogue::RockClimb]
-      pbMessage(_INTL("{1} used the {2}!",$Trainer.name,GameData::Item.get(:HIKINGGEAR).name))
+    if HM_Catalogue.rock_climb != true
+      pbMessage(_INTL("{1} used Rock Climb!"))
       pbHiddenMoveAnimation(nil)
     end
     if event.direction==8

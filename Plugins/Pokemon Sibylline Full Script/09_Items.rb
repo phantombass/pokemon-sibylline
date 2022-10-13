@@ -18,6 +18,7 @@ Battle::ItemEffects::OnSwitchIn.add(:LEVITATEORB,
     if ability != battler.ability_id
       battle.pbShowAbilitySplash(battler,false,true)
       battle.pbDisplay(_INTL("{1}'s Levitate Orb lifts it off the ground!",battler.name))
+      @battleAI.reveal_item(battler)
       battle.pbHideAbilitySplash(battler)
       battler.ability_id = ability
     end
@@ -234,7 +235,7 @@ Battle::ItemEffects::OnSwitchIn.add(:SHADOWGUARDORB,
 
 Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
   proc { |item, battler, battle|
-    next false if (battle.field.terrain != :Grassy || battle.field.field_effects != :Garden)
+    next false if (battle.field.terrain != :Grassy && battle.field.field_effects != :Garden)
     next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
     itemName = GameData::Item.get(item).name
     battle.pbCommonAnimation("UseItem", battler)

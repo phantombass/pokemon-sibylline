@@ -415,7 +415,7 @@ class Battle::Move::DoublePowerIfUserPoisonedBurnedParalyzed < Battle::Move
   def damageReducedByBurn?; return Settings::MECHANICS_GENERATION <= 5; end
 
   def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if user.poisoned? || user.burned? || user.paralyzed?
+    baseDmg *= 2 if user.poisoned? || user.burned? || user.paralyzed? || user.frozen?
     return baseDmg
   end
 end

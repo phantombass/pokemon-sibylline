@@ -479,34 +479,6 @@ class NewDexNav
 end
 
 class PokemonPauseMenu_Scene
-  def pbStartScene
-    if $game_switches[NavNums::Dispose] == false
-      @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
-      @viewport.z = 99999
-      @sprites = {}
-      @sprites["cmdwindow"] = Window_CommandPokemon.new([])
-      @sprites["cmdwindow"].visible = false
-      @sprites["cmdwindow"].viewport = @viewport
-      @sprites["infowindow"] = Window_UnformattedTextPokemon.newWithSize("", 0, 0, 32, 32, @viewport)
-      @sprites["infowindow"].visible = false
-      @sprites["helpwindow"] = Window_UnformattedTextPokemon.newWithSize("", 0, 0, 32, 32, @viewport)
-      @sprites["helpwindow"].visible = false
-      @sprites["levelcapwindow"] = Window_UnformattedTextPokemon.newWithSize("Level Cap: #{LEVEL_CAP[$game_system.level_cap]}",0,64,208,64,@viewport)
-      @sprites["levelcapwindow"].visible = false
-      @infostate = false
-      @helpstate = false
-      $close_dexnav = 0
-      $sprites = @sprites
-      pbSEPlay("GUI menu open")
-    else
-      $viewport1.dispose
-      $currentDexSearch = nil
-      $close_dexnav = 1
-      $game_switches[NavNums::Dispose] = false
-      pbSEPlay("GUI menu close")
-      return
-    end
-  end
   def pbShowCommands(commands)
     if $game_switches[NavNums::Dispose] == false && $close_dexnav < 1
       ret = -1
@@ -552,7 +524,7 @@ class PokemonPauseMenu
     # Show extra info window if relevant
     pbShowInfo
     if $close_dexnav != 1
-      pbShowLevelCap if Settings::LEVEL_CAP_SWITCH
+      $PokemonSystem.level_caps == 0 ? pbShowLevelCap : pbHideLevelCap
     end
     # Get all commands
     command_list = []
